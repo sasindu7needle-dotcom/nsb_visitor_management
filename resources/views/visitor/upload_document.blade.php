@@ -591,7 +591,13 @@
                 const data = await response.json().catch(() => ({}));
 
                 if (!response.ok || !data.success) {
-                    throw new Error(data.error || "Document OCR verification failed.");
+                    const validationError = Object.values(data.errors || {}).flat()[0];
+                    throw new Error(
+                        data.error ||
+                        validationError ||
+                        data.message ||
+                        "Document OCR verification failed."
+                    );
                 }
 
                 showToast('Document verified successfully! Redirecting...', 'success');
