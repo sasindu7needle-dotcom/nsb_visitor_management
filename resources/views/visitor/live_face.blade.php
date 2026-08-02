@@ -12,9 +12,9 @@
     <section class="hero">
         <div class="hero-content">
             <a class="face-back" href="{{ route('visitor.upload_document', ['type' => $type]) }}">← Upload document again</a>
-            <div class="tagline">Identity security check</div>
-            <h1 class="headline">Confirm it’s really you<span class="dot">.</span></h1>
-            <p class="face-intro">We’ll capture one live camera frame and compare it locally with the portrait on your document using OpenCV face detection and matching.</p>
+            <div class="tagline">Visitor profile photo</div>
+            <h1 class="headline">Capture your photo<span class="dot">.</span></h1>
+            <p class="face-intro">We’ll capture one current camera photo and securely store it with your visitor profile. No document-to-face matching is performed.</p>
 
             <div class="face-card">
                 <div class="face-status"><span id="statusDot"></span><strong id="statusText">Camera not started</strong></div>
@@ -31,8 +31,9 @@
                 <div class="face-tips"><span>Face forward</span><span>Remove sunglasses</span><span>Use even lighting</span></div>
                 <p class="face-error" id="faceError" role="alert"></p>
                 <button type="button" id="cameraBtn" class="btn btn-secondary btn-large form-width-100">Start camera</button>
-                <button type="button" id="captureBtn" class="btn btn-primary btn-large form-width-100" disabled>Capture &amp; verify face</button>
-                <p class="face-disclaimer">Face images are processed locally and are not sent to a cloud recognition service. Unclear or mismatched results will not unlock registration.</p>
+                <button type="button" id="captureBtn" class="btn btn-primary btn-large form-width-100" disabled>Capture profile photo</button>
+                <a id="continueBtn" class="btn btn-primary btn-large form-width-100 face-continue" href="#" hidden>Photo saved — continue</a>
+                <p class="face-disclaimer">This camera image is stored privately with your visitor record and will be visible to authorized security staff.</p>
             </div>
         </div>
         <div class="hero-visual" aria-hidden="true">@include('visitor.partials.checkin-illustration')</div>
@@ -44,17 +45,20 @@
         body.landing-page.live-face-page .face-card { width:100%; max-width:520px; padding:22px; border:2px solid #e2e8f0; border-radius:14px; background:#fff; box-shadow:0 20px 45px rgba(17,17,17,.08); }
         body.landing-page.live-face-page .face-status { display:flex; align-items:center; gap:8px; margin-bottom:13px; color:#4b5563; font-size:12px; }
         body.landing-page.live-face-page .face-status span { width:9px; height:9px; border-radius:50%; background:#9ca3af; box-shadow:0 0 0 4px rgba(156,163,175,.14); }
-        body.landing-page.live-face-page .face-status.is-live span { background:#c8e063; box-shadow:0 0 0 4px rgba(200,224,99,.22); }
+        body.landing-page.live-face-page .face-status.is-live span { background:#2563EB; box-shadow:0 0 0 4px rgba(37,99,235,.22); }
         body.landing-page.live-face-page .camera-stage { position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; border-radius:12px; background:#171717; }
         body.landing-page.live-face-page #camera { display:none; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
         body.landing-page.live-face-page .camera-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px; color:#fff; text-align:center; }
-        body.landing-page.live-face-page .camera-placeholder svg { width:36px; height:36px; fill:none; stroke:#c8e063; stroke-width:1.8; }
+        body.landing-page.live-face-page .camera-placeholder svg { width:36px; height:36px; fill:none; stroke:#2563EB; stroke-width:1.8; }
         body.landing-page.live-face-page .camera-placeholder small { color:#b8b8b8; font-size:11px; }
-        body.landing-page.live-face-page .face-guide { display:none; position:absolute; z-index:2; left:50%; top:50%; width:43%; height:70%; border:2px solid #c8e063; border-radius:48%; transform:translate(-50%,-50%); box-shadow:0 0 0 999px rgba(0,0,0,.18); pointer-events:none; }
+        body.landing-page.live-face-page .face-guide { display:none; position:absolute; z-index:2; left:50%; top:50%; width:43%; height:70%; border:2px solid #2563EB; border-radius:48%; transform:translate(-50%,-50%); box-shadow:0 0 0 999px rgba(0,0,0,.18); pointer-events:none; }
         body.landing-page.live-face-page .face-tips { display:flex; justify-content:center; flex-wrap:wrap; gap:7px; margin:12px 0; }
-        body.landing-page.live-face-page .face-tips span { padding:5px 8px; border-radius:99px; background:#f2f7dc; color:#53620b; font-size:10px; font-weight:700; }
+        body.landing-page.live-face-page .face-tips span { padding:5px 8px; border-radius:99px; background:#eff6ff; color:#1E3A8A; font-size:10px; font-weight:700; }
         body.landing-page.live-face-page .face-error { min-height:18px; margin:0 0 8px; color:#c43d3d; font-size:12px; line-height:1.4; }
         body.landing-page.live-face-page .face-card .btn { margin-top:9px; }
+        body.landing-page.live-face-page .face-continue { display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1769ed;color:#fff; }
+        body.landing-page.live-face-page .face-continue[hidden] { display:none; }
+        body.landing-page.live-face-page .face-status.is-verified span { background:#22a45d;box-shadow:0 0 0 4px rgba(34,164,93,.18); }
         body.landing-page.live-face-page .face-disclaimer { margin:13px 0 0; color:#777; font-size:10px; line-height:1.45; text-align:center; }
         @media (max-width:700px) { body.landing-page.live-face-page .face-card { padding:16px; } }
     </style>
@@ -64,6 +68,7 @@
         const canvas = document.getElementById('captureCanvas');
         const cameraBtn = document.getElementById('cameraBtn');
         const captureBtn = document.getElementById('captureBtn');
+        const continueBtn = document.getElementById('continueBtn');
         const placeholder = document.getElementById('cameraPlaceholder');
         const guide = document.querySelector('.face-guide');
         const status = document.querySelector('.face-status');
@@ -92,7 +97,7 @@
         captureBtn.addEventListener('click', () => {
             if (!stream || !video.videoWidth) return;
             captureBtn.disabled = true;
-            captureBtn.textContent = 'Checking face match locally…';
+            captureBtn.textContent = 'Saving profile photo…';
             errorBox.textContent = '';
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
@@ -106,14 +111,19 @@
                 try {
                     const response = await fetch("{{ route('visitor.verify_live_face') }}", {method:'POST', headers:{'X-CSRF-TOKEN':"{{ csrf_token() }}", 'Accept':'application/json'}, body:form});
                     const data = await response.json().catch(() => ({}));
-                    if (!response.ok || !data.success) throw new Error(data.error || 'Face check failed. Please try again.');
-                    statusText.textContent = `Verified · ${data.score}% consistency`;
+                    if (!response.ok || !data.success) throw new Error(data.error || 'The profile photo could not be saved. Please try again.');
+                    statusText.textContent = 'Profile photo captured';
                     stream.getTracks().forEach(track => track.stop());
-                    window.location.href = data.redirect_url;
+                    guide.style.display = 'none';
+                    status.classList.remove('is-live');
+                    status.classList.add('is-verified');
+                    captureBtn.hidden = true;
+                    continueBtn.href = data.redirect_url;
+                    continueBtn.hidden = false;
                 } catch (error) {
                     errorBox.textContent = error.message;
                     captureBtn.disabled = false;
-                    captureBtn.textContent = 'Capture & verify face';
+                    captureBtn.textContent = 'Capture profile photo';
                 }
             }, 'image/jpeg', .9);
         });

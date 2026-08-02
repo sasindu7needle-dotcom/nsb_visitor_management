@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Visitor;
 use App\Models\VerifiedVisitor;
+use App\Models\Department;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use F9WebLtd\QrCode\Facades\QrCode;
 
 class VisitorController extends Controller
@@ -55,8 +57,15 @@ class VisitorController extends Controller
 
         $type = data_get($verification, 'document_type', $type);
         $category = $request->session()->get('visitor_category', []);
+        $departments = Schema::hasTable('departments')
+            ? Department::query()
+                ->where('is_active', true)
+                ->with(['people' => fn ($query) => $query->where('is_active', true)->orderBy('name')])
+                ->orderBy('name')
+                ->get()
+            : $this->legacyDepartments();
 
-        return view('visitor.create', compact('type', 'verification', 'category'));
+        return view('visitor.create', compact('type', 'verification', 'category', 'departments'));
     }
 
     /**
@@ -108,28 +117,88 @@ class VisitorController extends Controller
         }
 
         $validated = $request->validate([
-            'document_type' => 'required|in:nic,driving_license,passport',
-            'full_name' => 'required|string|max:180',
-            'document_number' => 'required|string|max:30',
-            'address' => 'required|string|max:500',
+            'full_name' => ['nullable', 'string', 'max:180'],
+            'document_number' => ['nullable', 'string', 'max:30'],
             'mobile_number' => ['required', 'regex:/^[0-9]{9}$/'],
             'same_as_mobile' => 'nullable|boolean',
-            'whatsapp_number' => ['required_unless:same_as_mobile,1', 'nullable', 'regex:/^[0-9]{9}$/'],
-            'occupation' => 'required|string|max:100',
-            'company' => 'required|string|max:150',
+            'whatsapp_number' => ['nullable', 'regex:/^[0-9]{9}$/'],
+            'occupation' => 'nullable|string|max:100',
+            'company' => 'nullable|string|max:150',
+            'department' => 'required|string|max:150',
+            'person_to_meet' => 'required|string|max:180',
+            'visitor_count' => 'required|integer|min:1|max:20',
         ], [
             'mobile_number.regex' => 'Enter a 9-digit number after +94.',
             'whatsapp_number.regex' => 'Enter a 9-digit number after +94.',
         ]);
 
+        if (Schema::hasTable('departments')) {
+            $department = Department::query()
+                ->where('name', $validated['department'])
+                ->where('is_active', true)
+                ->first();
+
+            $personIsAvailable = $department?->people()
+                ->where('name', $validated['person_to_meet'])
+                ->where('is_active', true)
+                ->exists();
+        } else {
+            $department = in_array($validated['department'], config('vms.departments', []), true);
+            $personIsAvailable = in_array($validated['person_to_meet'], config('vms.people_to_meet', []), true);
+        }
+
+        if (! $department || ! $personIsAvailable) {
+            throw ValidationException::withMessages([
+                'person_to_meet' => 'Select a person available in the selected department.',
+            ]);
+        }
+        $recordedName = trim((string) (
+            data_get($verification, 'full_name')
+            ?: data_get($verification, 'full_name_latin')
+        ));
+        $recordedNameIsReliable = $this->isReliableIdentityName($recordedName);
+        $verifiedName = $recordedNameIsReliable
+            ? $recordedName
+            : trim((string) (data_get($validated, 'full_name') ?: $recordedName));
+        $verifiedDocumentNumber = strtoupper((string) preg_replace(
+            '/\s+/',
+            '',
+            (string) (data_get($verification, 'document_number') ?: data_get($validated, 'document_number'))
+        ));
+
+        if (blank($verifiedName) || blank($verifiedDocumentNumber)) {
+            return redirect()
+                ->route('visitor.create', ['type' => data_get($verification, 'document_type', 'nic')])
+                ->withInput()
+                ->withErrors([
+                    'verification' => 'Enter the full name and NIC / ID number before submitting the visit request.',
+                ]);
+        }
+
+        if (data_get($verification, 'document_type') === 'nic'
+            && VerifiedVisitor::hasSubmittedNicRegistration(
+                $verifiedDocumentNumber,
+                data_get($verification, 'verification_id', data_get($verification, 'session_id'))
+            )) {
+            return redirect()
+                ->route('visitor.create', ['type' => 'nic'])
+                ->withInput()
+                ->withErrors([
+                    'verification' => 'This NIC is already registered and cannot be used to register again.',
+                ]);
+        }
+
         $details = array_merge($validated, [
             'verification_id' => data_get($verification, 'verification_id', data_get($verification, 'session_id')),
             'didit_session_id' => data_get($verification, 'verification_id', data_get($verification, 'session_id')),
-            'full_name' => $validated['full_name'],
-            'full_name_latin' => $validated['full_name'],
-            'document_number' => strtoupper(preg_replace('/\s+/', '', $validated['document_number'])),
-            'address' => $validated['address'],
-            'address_latin' => $validated['address'],
+            'document_type' => data_get($verification, 'document_type', 'nic'),
+            'full_name' => $verifiedName,
+            'full_name_latin' => $recordedNameIsReliable
+                ? (data_get($verification, 'full_name_latin') ?: $verifiedName)
+                : $verifiedName,
+            'document_number' => $verifiedDocumentNumber,
+            'address' => data_get($verification, 'address'),
+            'address_latin' => data_get($verification, 'address_latin', data_get($verification, 'address')),
             'photo_url' => data_get($verification, 'photo_url')
                 ?: route('visitor.session_photo', ['type' => data_get($verification, 'selfie_path') ? 'selfie' : 'photo']),
             'photo_path' => data_get($verification, 'photo_path'),
@@ -148,13 +217,27 @@ class VisitorController extends Controller
             'verified_at' => data_get($verification, 'verified_at'),
             'whatsapp_number' => $request->boolean('same_as_mobile')
                 ? $validated['mobile_number']
-                : $validated['whatsapp_number'],
+                : ($validated['whatsapp_number'] ?? $validated['mobile_number']),
+            'department' => $validated['department'] ?? ($validated['company'] ?? 'Not specified'),
+            'person_to_meet' => $validated['person_to_meet'] ?? ($validated['occupation'] ?? 'Not specified'),
+            'visitor_count' => (int) ($validated['visitor_count'] ?? 1),
+            'company' => $validated['company'] ?? ($validated['department'] ?? null),
+            'occupation' => $validated['occupation'] ?? 'Visitor',
+            'expected_gate' => config('vms.expected_gate', 'Main Gate'),
+            'approval_status' => 'pending',
+            'approval_requested_at' => now()->toIso8601String(),
+            'payment_status' => 'not_required',
+            'registration_status' => 'approval_pending',
             'category' => data_get($category, 'name', 'Not assigned'),
             'entrance_fee' => data_get($category, 'entrance_fee'),
         ]);
 
         $request->session()->put('visitor_registration', $details);
-        $visitor = $this->persistVerifiedVisitor($details);
+        $visitor = $this->persistVerifiedVisitor($details, [
+            'payment_method' => null,
+            'payment_status' => 'not_required',
+            'registration_status' => 'approval_pending',
+        ]);
         $request->session()->put('visitor_registration.record_id', $visitor->id);
 
         return view('visitor.confirm', compact('details'));
@@ -396,6 +479,12 @@ class VisitorController extends Controller
             'whatsapp_number' => '+94'.data_get($details, 'whatsapp_number'),
             'occupation' => data_get($details, 'occupation'),
             'company' => data_get($details, 'company'),
+            'department' => data_get($details, 'department'),
+            'person_to_meet' => data_get($details, 'person_to_meet'),
+            'visitor_count' => data_get($details, 'visitor_count', 1),
+            'expected_gate' => data_get($details, 'expected_gate', config('vms.expected_gate', 'Main Gate')),
+            'approval_status' => data_get($details, 'approval_status', 'pending'),
+            'approval_requested_at' => data_get($details, 'approval_requested_at', now()),
             'photo_url' => data_get($details, 'photo_url'),
             'photo_path' => data_get($details, 'photo_path'),
             'photo_mime' => data_get($details, 'photo_mime'),
@@ -424,5 +513,41 @@ class VisitorController extends Controller
             ['verification_id' => $verificationId],
             $values
         );
+    }
+
+    private function isReliableIdentityName(string $name): bool
+    {
+        $words = preg_split('/\s+/', strtoupper(trim($name)), -1, PREG_SPLIT_NO_EMPTY);
+        $letterCounts = array_map(
+            fn ($word) => strlen((string) preg_replace('/[^A-Z]/', '', $word)),
+            $words
+        );
+
+        return count($words) >= 2
+            && array_sum($letterCounts) >= 6
+            && max($letterCounts ?: [0]) >= 3;
+    }
+
+    /**
+     * Keep the registration form usable when an older installation has not
+     * run the directory migration yet.
+     */
+    private function legacyDepartments()
+    {
+        $peopleByDepartment = [
+            'Finance Department' => ['Ms. Nirosha Fernando'],
+            'Human Resources' => ['Mr. Kasun Perera'],
+            'Information Technology' => ['Ms. Amaya Silva'],
+            'Operations Department' => ['Mr. Dinesh Jayawardena'],
+        ];
+
+        return collect(config('vms.departments', []))->map(function (string $name) use ($peopleByDepartment) {
+            $department = new Department(['name' => $name, 'is_active' => true]);
+            $people = collect($peopleByDepartment[$name] ?? [])->map(
+                fn (string $person) => new \App\Models\DepartmentPerson(['name' => $person, 'is_active' => true])
+            );
+
+            return $department->setRelation('people', $people);
+        });
     }
 }

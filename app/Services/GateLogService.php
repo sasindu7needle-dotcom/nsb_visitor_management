@@ -152,6 +152,14 @@ class GateLogService
             throw new GateScanException('Access denied — this visitor is blocked.', 'blocked', 403);
         }
 
+        if (($visitor->approval_status ?? 'approved') !== 'approved') {
+            $message = $visitor->approval_status === 'rejected'
+                ? 'Access denied — this visit request was rejected by security.'
+                : 'Access pending — a security officer must approve this visit first.';
+
+            throw new GateScanException($message, 'approval_required', 403);
+        }
+
         $direction = $latest?->direction === 'in' ? 'out' : 'in';
 
         if ($requestedDirection !== null && ! in_array($requestedDirection, ['in', 'out'], true)) {

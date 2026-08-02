@@ -10,6 +10,7 @@ class VisitorRegistrationTest extends TestCase
 {
     private array $verification = [
         'session_id' => '11111111-2222-4333-8444-555555555555',
+        'document_type' => 'nic',
         'full_name' => 'Nimal Perera',
         'document_number' => '199012345678',
         'address' => '12 Galle Road, Colombo',
@@ -51,23 +52,34 @@ class VisitorRegistrationTest extends TestCase
             'same_as_mobile' => '1',
             'occupation' => 'Engineer',
             'company' => 'Acme',
+            'department' => 'Finance Department',
+            'person_to_meet' => 'Ms. Nirosha Fernando',
+            'visitor_count' => 1,
             'full_name' => 'Tampered Name',
-            'document_number' => '199012345678',
-            'address' => '12 Galle Road, Colombo',
+            'document_number' => '000000000000',
+            'address' => 'Tampered Address',
             'entrance_fee' => '0',
         ])->assertOk()
-            ->assertSee('Tampered Name')
-            ->assertSee('LKR 1,500.00')
+            ->assertSee('Nimal Perera')
+            ->assertDontSee('Tampered Name')
+            ->assertDontSee('000000000000')
+            ->assertDontSee('Tampered Address')
+            ->assertDontSee('LKR 1,500.00')
             ->assertSee('+94 771234567')
             ->assertSee('https://example.test/verified-photo.jpg')
-            ->assertSee('Choose a payment method');
+            ->assertSee('sent to the security officer')
+            ->assertSee('Finish')
+            ->assertDontSee('Choose a payment method')
+            ->assertDontSee('Continue to payment');
 
         $this->assertDatabaseHas('verified_visitors', [
             'verification_id' => $this->verification['session_id'],
-            'document_type' => 'passport',
+            'document_type' => 'nic',
             'document_number' => '199012345678',
-            'full_name' => 'Tampered Name',
+            'full_name' => 'Nimal Perera',
             'address' => '12 Galle Road, Colombo',
+            'payment_status' => 'not_required',
+            'registration_status' => 'approval_pending',
         ]);
     }
 
@@ -112,6 +124,9 @@ class VisitorRegistrationTest extends TestCase
                 'whatsapp_number' => '456',
                 'occupation' => 'Engineer',
                 'company' => 'Acme',
+                'department' => 'Finance Department',
+                'person_to_meet' => 'Ms. Nirosha Fernando',
+                'visitor_count' => 1,
             ])->assertRedirect()
             ->assertSessionHasErrors(['mobile_number', 'whatsapp_number']);
     }

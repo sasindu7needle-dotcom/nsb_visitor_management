@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VerifiedVisitor;
 use App\Exceptions\GateScanException;
+use App\Models\VerifiedVisitor;
+use App\Models\ReturningFaceVerification;
 use App\Models\GateLog;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -17,14 +18,14 @@ class AdminVisitorController extends Controller
     {
         $filters = $request->validate([
             'search' => 'nullable|string|max:100',
-            'payment_status' => 'nullable|in:pending,cash_pending,card_pending,paid',
+            'payment_status' => 'nullable|in:pending,cash_pending,card_pending,paid,not_required',
             'checkin_status' => 'nullable|in:inside,outside',
         ]);
 
         $latestGateLogIds = GateLog::query()->selectRaw('MAX(id)')->groupBy('visitor_id');
 
         $visitors = VerifiedVisitor::query()
-            ->with(['gateLogs' => fn ($query) => $query->orderBy('scanned_at')->orderBy('id')])
+            ->with(['gateLogs' => fn ($query) => $query->orderBy('scanned_at')->orderBy('id'), 'latestReturningFaceVerification'])
             ->when(data_get($filters, 'search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
@@ -55,45 +56,25 @@ class AdminVisitorController extends Controller
         return view('admin.visitors.index', compact('visitors', 'stats', 'filters'));
     }
 
-    public function toggleCheckin(VerifiedVisitor $visitor, GateLogService $gateLogService)
-    {
-        try {
-            $adminUsername = (string) request()->session()->get('admin_username');
-            $scannedBy = auth()->id() ?: User::query()
-                ->where('name', $adminUsername)
-                ->orWhere('email', $adminUsername)
-                ->value('id');
-            $log = $gateLogService->scan((string) ($visitor->verification_id ?: $visitor->id), 'ADMIN', $scannedBy);
-        } catch (GateScanException $exception) {
-            return redirect()->route('admin.visitors.index')->withErrors(['checkin' => $exception->getMessage()]);
-        }
-
-        return redirect()->route('admin.visitors.index')->with('status', 'Visitor checked '.strtoupper($log->direction).' from the admin control.');
-    }
-
     public function update(Request $request, VerifiedVisitor $visitor)
     {
         $validated = $request->validate([
-            'full_name' => 'nullable|string|max:180',
-            'document_type' => 'nullable|in:nic,driving_license,passport',
-            'document_number' => 'nullable|string|max:30',
             'address' => 'nullable|string|max:500',
             'mobile_number' => 'nullable|string|max:20',
             'whatsapp_number' => 'nullable|string|max:20',
             'occupation' => 'nullable|string|max:100',
             'company' => 'nullable|string|max:150',
+            'department' => 'nullable|string|max:150',
+            'person_to_meet' => 'nullable|string|max:180',
+            'visitor_count' => 'nullable|integer|min:1|max:20',
             'category' => 'nullable|string|max:100',
             'entrance_fee' => 'nullable|numeric|min:0|max:9999999999',
             'payment_method' => 'nullable|in:visa_master,amex,cash',
-            'payment_status' => 'required|in:pending,cash_pending,card_pending,paid',
+            'payment_status' => 'required|in:pending,cash_pending,card_pending,paid,not_required',
             'face_verification_status' => 'required|in:pending,verified,review_required,rejected',
             'is_blocked' => 'required|boolean',
         ]);
 
-        if (! empty($validated['document_number'])) {
-            $validated['document_number'] = strtoupper(preg_replace('/\s+/', '', $validated['document_number']));
-        }
-        $validated['full_name_latin'] = $validated['full_name'] ?? null;
         $validated['address_latin'] = $validated['address'] ?? null;
         $validated['face_verified_at'] = $validated['face_verification_status'] === 'verified'
             ? ($visitor->face_verified_at ?: now())
@@ -104,13 +85,36 @@ class AdminVisitorController extends Controller
         return redirect()->route('admin.visitors.index')->with('status', 'Visitor details updated successfully.');
     }
 
+    /** Check out a visitor from the admin dashboard's inside-visitor list. */
+    public function checkout(VerifiedVisitor $visitor, GateLogService $gateLogService)
+    {
+        $adminUsername = (string) request()->session()->get('admin_username');
+        $scannedBy = auth()->id() ?: User::query()
+            ->where('name', $adminUsername)
+            ->orWhere('email', $adminUsername)
+            ->value('id');
+
+        try {
+            $gateLogService->scan(
+                (string) ($visitor->verification_id ?: $visitor->id),
+                'ADMIN',
+                $scannedBy,
+                'out'
+            );
+        } catch (GateScanException $exception) {
+            return back()->withErrors(['checkout' => $exception->getMessage()]);
+        }
+
+        return back()->with('status', "{$visitor->full_name} has been checked out.");
+    }
+
     public function destroy(VerifiedVisitor $visitor)
     {
         $paths = collect([
             $visitor->photo_path,
             $visitor->back_photo_path,
             $visitor->selfie_path,
-        ])
+        ])->merge($visitor->returningFaceVerifications()->pluck('photo_path'))
         ->filter()
         ->map(fn ($path) => str_replace('\\', '/', trim($path)));
 
@@ -194,7 +198,7 @@ class AdminVisitorController extends Controller
             return redirect()
                 ->route('admin.visitors.index')
                 ->withErrors([
-                    'badge' => 'This card cannot be printed until the ID portrait and live camera photo have been successfully matched.',
+                    'badge' => 'This card cannot be printed until a live visitor profile photo has been captured.',
                 ]);
         }
 
@@ -218,6 +222,14 @@ class AdminVisitorController extends Controller
         abort_unless($visitor->selfie_path && Storage::disk('local')->exists($visitor->selfie_path), 404);
 
         return $this->currentPrivateImage($visitor->selfie_path, $visitor->selfie_mime);
+    }
+
+    public function returnFacePhoto(VerifiedVisitor $visitor, ReturningFaceVerification $faceCheck)
+    {
+        abort_unless($faceCheck->visitor_id === $visitor->id, 404);
+        abort_unless($faceCheck->photo_path && Storage::disk('local')->exists($faceCheck->photo_path), 404);
+
+        return $this->currentPrivateImage($faceCheck->photo_path, $faceCheck->photo_mime);
     }
 
     public function backPhoto(VerifiedVisitor $visitor)

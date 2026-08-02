@@ -15,6 +15,7 @@
         <a href="{{ route('admin.configurations.event.edit') }}">Event Configurations</a>
         <a href="{{ route('admin.configurations.capacity.edit') }}">Occupancy Limit</a>
         <a href="{{ route('admin.configurations.categories.index') }}">Visitor Categories</a>
+        <a href="{{ route('admin.configurations.departments.index') }}">Departments &amp; People</a>
         <a class="active" href="{{ route('admin.configurations.users.index') }}" aria-current="page">Users &amp; Access</a>
     </nav>
 
@@ -57,7 +58,7 @@
 
                     <label class="configuration-field">
                         <span>Email Address <b>*</b></span>
-                        <input type="email" name="email" value="{{ old('email') }}" maxlength="255" required placeholder="e.g. john@tractionguest.com">
+                        <input type="email" name="email" value="{{ old('email') }}" maxlength="255" required placeholder="e.g. officer@nsb.lk">
                     </label>
 
                     <label class="configuration-field">
@@ -121,7 +122,7 @@
                             <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
                                 <td style="padding: 14px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #c8e063; color: #111; display: grid; place-items: center; font-weight: 800; font-size: 12px; flex: 0 0 32px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #2563EB; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px; flex: 0 0 32px;">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                         <div>

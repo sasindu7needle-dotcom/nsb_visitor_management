@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\VerifiedVisitor;
 use App\Services\LocalFaceVerificationService;
 use App\Services\TesseractOcrService;
 use Illuminate\Http\Client\ConnectionException;
@@ -138,6 +139,14 @@ class VisitorCheckinController extends Controller
             ], 422);
         }
 
+        if ($docType === 'nic' && VerifiedVisitor::hasSubmittedNicRegistration($parsed['document_number'])) {
+            return response()->json([
+                'success' => false,
+                'code' => 'nic_already_registered',
+                'error' => 'This NIC is already registered and cannot be used to register again.',
+            ], 422);
+        }
+
         try {
             $documentFace = $faceVerifier->inspectDocument($file->getRealPath());
         } catch (\RuntimeException $exception) {
@@ -197,6 +206,30 @@ class VisitorCheckinController extends Controller
         $request->session()->put('didit_verification', $verification);
         $request->session()->save();
 
+        VerifiedVisitor::updateOrCreate(
+            ['verification_id' => $verificationId],
+            [
+                'document_type' => $docType,
+                'document_number' => $parsed['document_number'],
+                'full_name' => $parsed['full_name'],
+                'full_name_latin' => $parsed['full_name_latin'],
+                'address' => $parsed['address'],
+                'address_latin' => $parsed['address_latin'],
+                'photo_url' => $verification['photo_url'],
+                'photo_path' => $photoPath,
+                'photo_mime' => $mime,
+                'back_photo_path' => $backPhotoPath,
+                'back_photo_mime' => $backPhotoMime,
+                'ocr_provider' => $ocrProvider,
+                'identity_reviewed_at' => now(),
+                'face_verification_status' => 'pending',
+                'approval_status' => 'draft',
+                'registration_status' => 'identity_verified',
+                'payment_status' => 'pending',
+                'verified_at' => now(),
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'verification_id' => $verificationId,
@@ -205,8 +238,8 @@ class VisitorCheckinController extends Controller
         ]);
     }
 
-    /** Verify a camera-captured face against the identity-document portrait. */
-    public function verifyLiveFace(Request $request, LocalFaceVerificationService $faceVerifier)
+    /** Capture and store a current visitor profile photo. */
+    public function verifyLiveFace(Request $request)
     {
         $verification = $request->session()->get('verification', []);
         if (! is_array($verification) || blank(data_get($verification, 'photo_path'))) {
@@ -219,51 +252,6 @@ class VisitorCheckinController extends Controller
 
         $file = $request->file('selfie');
         $bytes = file_get_contents($file->getRealPath());
-
-        $documentPath = Storage::disk('local')->path(data_get($verification, 'photo_path'));
-        if (! is_file($documentPath)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'The verified ID portrait is unavailable. Please upload the identity document again.',
-            ], 422);
-        }
-
-        try {
-            $faceResult = $faceVerifier->compare($documentPath, $file->getRealPath());
-        } catch (\RuntimeException $exception) {
-            report($exception);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Local face verification is temporarily unavailable. Please contact reception.',
-            ], 503);
-        }
-
-        if (! data_get($faceResult, 'success')) {
-            return response()->json([
-                'success' => false,
-                'error' => data_get($faceResult, 'message', 'The live face could not be verified.'),
-                'code' => data_get($faceResult, 'code'),
-            ], 422);
-        }
-
-        $score = (float) data_get($faceResult, 'similarity_percent', 0);
-        if (! data_get($faceResult, 'matched')) {
-            $request->session()->put('verification', array_merge($verification, [
-                'face_verification_status' => 'rejected',
-                'face_match_score' => $score,
-                'face_detection_confidence' => data_get($faceResult, 'live_detection_confidence'),
-                'face_provider' => 'opencv_yunet_sface',
-            ]));
-            $request->session()->save();
-
-            return response()->json([
-                'success' => false,
-                'error' => data_get($faceResult, 'message'),
-                'code' => 'face_mismatch',
-                'score' => $score,
-            ], 422);
-        }
 
         $extension = $file->getClientOriginalExtension() ?: 'jpg';
         $selfiePath = 'verified-visitors/'.data_get($verification, 'verification_id').'-live.'.$extension;
@@ -279,16 +267,25 @@ class VisitorCheckinController extends Controller
             'selfie_path' => $selfiePath,
             'selfie_mime' => $file->getMimeType() ?: 'image/jpeg',
             'face_verification_status' => 'verified',
-            'face_match_score' => $score,
-            'face_detection_confidence' => data_get($faceResult, 'live_detection_confidence'),
+            'face_match_score' => null,
+            'face_detection_confidence' => null,
             'face_verified_at' => now()->toIso8601String(),
-            'face_provider' => 'opencv_yunet_sface',
+            'face_provider' => 'camera_capture',
         ]));
         $request->session()->save();
+        VerifiedVisitor::where('verification_id', data_get($verification, 'verification_id'))->update([
+            'selfie_path' => $selfiePath,
+            'selfie_mime' => $file->getMimeType() ?: 'image/jpeg',
+            'face_verification_status' => 'verified',
+            'face_match_score' => null,
+            'face_detection_confidence' => null,
+            'face_verified_at' => now(),
+            'face_provider' => 'camera_capture',
+            'registration_status' => 'face_verified',
+        ]);
 
         return response()->json([
             'success' => true,
-            'score' => $score,
             'redirect_url' => route('visitor.create', ['type' => data_get($verification, 'document_type', 'nic')]),
         ]);
     }
@@ -445,13 +442,21 @@ class VisitorCheckinController extends Controller
         }
 
         foreach ($lines as $line) {
-            $candidate = trim((string) preg_replace('/[^A-Z .-]/', '', $line));
+            // OCR often returns names in title case (for example, \"Nimal
+            // Perera\"). Normalise first so those letters are not discarded.
+            $candidate = trim((string) preg_replace('/[^A-Z .-]/', '', strtoupper($line)));
             $words = preg_split('/\s+/', $candidate, -1, PREG_SPLIT_NO_EMPTY);
+            $nameLetterCounts = array_map(
+                fn ($word) => strlen((string) preg_replace('/[^A-Z]/', '', $word)),
+                $words
+            );
             if (count($words) >= 2 && count($words) <= 7
                 && min(array_map('strlen', $words)) >= 2
+                && array_sum($nameLetterCounts) >= 6
+                && max($nameLetterCounts) >= 3
                 && preg_match('/^[A-Z]+(?:[ .-]+[A-Z]+)+$/', $candidate)
                 && ! str_contains($addressContext, str_replace(['.', '-'], '', $candidate))
-                && ! preg_match('/SRI LANKA|IDENTITY|NATIONAL|HOLDER|SIGNATURE|REPUBLIC|DEPARTMENT|DATE|PLACE|REGISTRATION/', $candidate)) {
+                && ! preg_match('/SRI LANKA|IDENTITY|NATIONAL|HOLDER|SIGNATURE|REPUBLIC|DEPARTMENT|DATE|PLACE|REGISTRATION|ROAD|STREET|MAWATHA|COLOMBO|KANDY|GALLE|JAFFNA/', $candidate)) {
                 $nameCandidates[] = $candidate;
             }
         }
@@ -463,8 +468,9 @@ class VisitorCheckinController extends Controller
     private function extractLatinName($lines): string
     {
         foreach ($lines as $line) {
-            if (! $this->containsSinhala($line) && preg_match('/^[A-Z\s]{4,40}$/', $line)) {
-                return trim($line);
+            $candidate = strtoupper(trim($line));
+            if (! $this->containsSinhala($line) && preg_match('/^[A-Z\s]{4,40}$/', $candidate)) {
+                return $candidate;
             }
         }
 

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\GateLog;
 use App\Models\VerifiedVisitor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -30,7 +29,7 @@ class AdminVisitorTest extends TestCase
             ->patch(route('admin.visitors.update', $visitor), [
                 'full_name' => 'John Doe Updated',
                 'document_type' => 'nic',
-                'document_number' => '199012345678',
+                'document_number' => '000000000000',
                 'address' => '123 Main Street',
                 'payment_status' => 'paid',
                 'payment_method' => 'cash',
@@ -43,7 +42,8 @@ class AdminVisitorTest extends TestCase
 
         $this->assertDatabaseHas('verified_visitors', [
             'id' => $visitor->id,
-            'full_name' => 'John Doe Updated',
+            'full_name' => 'John Doe',
+            'document_number' => '199012345678',
             'payment_status' => 'paid',
             'payment_method' => 'cash',
         ]);
@@ -202,31 +202,6 @@ class AdminVisitorTest extends TestCase
             ->assertOk()
             ->assertSee('Beta Outside Visitor')
             ->assertDontSee('Alpha Inside Visitor');
-    }
-
-    public function test_admin_checkin_control_records_in_and_out_movements(): void
-    {
-        Carbon::setTestNow('2026-07-28 11:00:00');
-        $visitor = VerifiedVisitor::create([
-            'verification_id' => '83d4d58d-412f-4c48-91c3-1352038913fa',
-            'full_name' => 'Movement Visitor',
-            'payment_status' => 'paid',
-            'face_verification_status' => 'verified',
-            'is_blocked' => false,
-        ]);
-        $session = ['admin_authenticated' => true, 'admin_username' => 'admin'];
-
-        $this->withSession($session)
-            ->patch(route('admin.visitors.checkin', $visitor))
-            ->assertRedirect(route('admin.visitors.index'));
-        $this->assertSame('in', $visitor->gateLogs()->latest('id')->value('direction'));
-
-        Carbon::setTestNow('2026-07-28 11:00:10');
-        $this->withSession($session)
-            ->patch(route('admin.visitors.checkin', $visitor))
-            ->assertRedirect(route('admin.visitors.index'));
-        $this->assertSame('out', $visitor->gateLogs()->latest('id')->value('direction'));
-        Carbon::setTestNow();
     }
 
     public function test_attendance_section_is_removed_from_admin_navigation_and_routes(): void

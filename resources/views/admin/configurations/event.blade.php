@@ -15,6 +15,7 @@
         <a class="active" href="{{ route('admin.configurations.event.edit') }}" aria-current="page">Event Configurations</a>
         <a href="{{ route('admin.configurations.capacity.edit') }}">Occupancy Limit</a>
         <a href="{{ route('admin.configurations.categories.index') }}">Visitor Categories</a>
+        <a href="{{ route('admin.configurations.departments.index') }}">Departments &amp; People</a>
         <a href="{{ route('admin.configurations.users.index') }}">Users &amp; Access</a>
     </nav>
 

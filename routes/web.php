@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\VerifiedVisitor;
 use App\Http\Controllers\VisitorController;
 use App\Http\Controllers\VisitorCheckinController;
+use App\Http\Controllers\ReturningVisitorController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminCapacityController;
@@ -12,11 +13,15 @@ use App\Http\Controllers\GateTerminalController;
 use App\Http\Controllers\AdminEventConfigurationController;
 use App\Http\Controllers\AdminVisitorCategoryController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminDepartmentDirectoryController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/visitor/new', [VisitorController::class, 'startNew'])->name('visitor.start');
+Route::get('/visitor/returning', [ReturningVisitorController::class, 'show'])->name('visitor.returning');
+Route::post('/api/visitor/returning/find', [ReturningVisitorController::class, 'findByNic'])->middleware('throttle:20,1')->name('visitor.returning.find');
+Route::post('/api/visitor/returning/compare', [ReturningVisitorController::class, 'captureAndCompare'])->middleware('throttle:10,1')->name('visitor.returning.compare');
 Route::get('/visitor/create', [VisitorController::class, 'create'])->name('visitor.create');
 Route::get('/visitor/upload-document', [VisitorController::class, 'showUploadDocument'])->name('visitor.upload_document');
 Route::get('/visitor/live-face-check', [VisitorController::class, 'showLiveFaceCheck'])->name('visitor.live_face');
@@ -48,7 +53,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin.auth')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/counts', [AdminDashboardController::class, 'counts'])->name('dashboard.counts');
-        Route::patch('/dashboard/inside-count', [AdminDashboardController::class, 'updateInsideCount'])->name('dashboard.inside_count');
+        Route::patch('/dashboard/visitor-requests/{visitor}', [AdminDashboardController::class, 'decideVisitorRequest'])->name('dashboard.visitor_requests.decide');
+        Route::patch('/dashboard/visitor-passes/{visitor}/return', [AdminDashboardController::class, 'markVisitorPassReturned'])->name('dashboard.visitor_passes.return');
         Route::get('/configurations/event', [AdminEventConfigurationController::class, 'edit'])->name('configurations.event.edit');
         Route::put('/configurations/event', [AdminEventConfigurationController::class, 'update'])->name('configurations.event.update');
         Route::get('/configurations/capacity', [AdminCapacityController::class, 'edit'])->name('configurations.capacity.edit');
@@ -65,15 +71,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/configurations/users/{user}', [AdminUserController::class, 'update'])->name('configurations.users.update');
         Route::patch('/configurations/users/{user}/toggle', [AdminUserController::class, 'toggleStatus'])->name('configurations.users.toggle');
         Route::delete('/configurations/users/{user}', [AdminUserController::class, 'destroy'])->name('configurations.users.destroy');
+
+        Route::get('/configurations/departments', [AdminDepartmentDirectoryController::class, 'index'])->name('configurations.departments.index');
+        Route::post('/configurations/departments', [AdminDepartmentDirectoryController::class, 'storeDepartment'])->name('configurations.departments.store');
+        Route::patch('/configurations/departments/{department}/toggle', [AdminDepartmentDirectoryController::class, 'toggleDepartment'])->name('configurations.departments.toggle');
+        Route::post('/configurations/departments/people', [AdminDepartmentDirectoryController::class, 'storePerson'])->name('configurations.departments.people.store');
+        Route::patch('/configurations/departments/people/{person}/toggle', [AdminDepartmentDirectoryController::class, 'togglePerson'])->name('configurations.departments.people.toggle');
+        Route::delete('/configurations/departments/people/{person}', [AdminDepartmentDirectoryController::class, 'destroyPerson'])->name('configurations.departments.people.destroy');
         Route::get('/visitors', [AdminVisitorController::class, 'index'])->name('visitors.index');
         Route::get('/visitors/{visitor}', fn (VerifiedVisitor $visitor) => redirect()->route('admin.visitors.index'))->name('visitors.show');
-        Route::patch('/visitors/{visitor}/checkin', [AdminVisitorController::class, 'toggleCheckin'])->name('visitors.checkin');
+        Route::patch('/visitors/{visitor}/checkout', [AdminVisitorController::class, 'checkout'])->name('visitors.checkout');
         Route::patch('/visitors/{visitor}', [AdminVisitorController::class, 'update'])->name('visitors.update');
         Route::delete('/visitors/{visitor}', [AdminVisitorController::class, 'destroy'])->name('visitors.destroy');
         Route::get('/visitors/{visitor}/photo', [AdminVisitorController::class, 'photo'])->name('visitors.photo');
         Route::get('/visitors/{visitor}/badge', [AdminVisitorController::class, 'badge'])->name('visitors.badge');
         Route::get('/visitors/{visitor}/back-photo', [AdminVisitorController::class, 'backPhoto'])->name('visitors.back_photo');
         Route::get('/visitors/{visitor}/selfie', [AdminVisitorController::class, 'selfie'])->name('visitors.selfie');
+        Route::get('/visitors/{visitor}/return-face-checks/{faceCheck}/photo', [AdminVisitorController::class, 'returnFacePhoto'])->name('visitors.return_face_photo');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     });
 });

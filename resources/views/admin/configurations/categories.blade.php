@@ -15,6 +15,7 @@
         <a href="{{ route('admin.configurations.event.edit') }}">Event Configurations</a>
         <a href="{{ route('admin.configurations.capacity.edit') }}">Occupancy Limit</a>
         <a class="active" href="{{ route('admin.configurations.categories.index') }}" aria-current="page">Visitor Categories</a>
+        <a href="{{ route('admin.configurations.departments.index') }}">Departments &amp; People</a>
         <a href="{{ route('admin.configurations.users.index') }}">Users &amp; Access</a>
     </nav>
 
@@ -68,8 +69,8 @@
                     <label class="configuration-field">
                         <span>Badge Color <b>*</b></span>
                         <div style="display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0;">
-                            <input type="color" name="badge_color" value="{{ old('badge_color', '#C8E063') }}" style="width: 46px; height: 46px; flex: 0 0 46px; padding: 3px; border: 1px solid #d8e0e7; border-radius: 9px; cursor: pointer; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-                            <input type="text" id="colorText" value="{{ old('badge_color', '#C8E063') }}" readonly style="flex: 1; min-width: 0; width: 100%; height: 46px; padding: 0 14px; color: #172033; background: #fff; border: 1px solid #d8e0e7; border-radius: 9px; font: 700 12px Inter, sans-serif; text-transform: uppercase; outline: none; letter-spacing: 0.5px;">
+                            <input type="color" name="badge_color" value="{{ old('badge_color', '#2563EB') }}" style="width: 46px; height: 46px; flex: 0 0 46px; padding: 3px; border: 1px solid #d8e0e7; border-radius: 9px; cursor: pointer; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                            <input type="text" id="colorText" value="{{ old('badge_color', '#2563EB') }}" readonly style="flex: 1; min-width: 0; width: 100%; height: 46px; padding: 0 14px; color: #172033; background: #fff; border: 1px solid #d8e0e7; border-radius: 9px; font: 700 12px Inter, sans-serif; text-transform: uppercase; outline: none; letter-spacing: 0.5px;">
                         </div>
                     </label>
 
@@ -79,7 +80,7 @@
                     </label>
 
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; font-weight: 700; color: #334155; margin-top: 4px;">
-                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: #9cb62f; cursor: pointer;">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: #2563EB; cursor: pointer;">
                         <span>Enable category for new visitor registrations</span>
                     </label>
                 </div>

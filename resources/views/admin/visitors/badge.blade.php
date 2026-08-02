@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --lime: #c8e063;
+            --lime: #2563EB;
             --ink: #18202b;
             --muted: #718064;
         }

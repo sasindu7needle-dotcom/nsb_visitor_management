@@ -6,7 +6,7 @@
 <style>
     body.landing-page .capacity-configuration-panel{max-width:1080px}
     body.landing-page .capacity-empty-state{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:20px;padding:30px 32px;background:#fff}
-    body.landing-page .capacity-empty-icon{display:grid;width:60px;height:60px;place-items:center;color:#75880d;background:#f1f7d5;border:1px solid #d8e59d;border-radius:16px}
+    body.landing-page .capacity-empty-icon{display:grid;width:60px;height:60px;place-items:center;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:16px}
     body.landing-page .capacity-empty-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}
     body.landing-page .capacity-empty-copy h3{margin:0 0 6px;color:#172000;font-size:17px}
     body.landing-page .capacity-empty-copy p{max-width:560px;margin:0;color:#778390;font-size:11px;line-height:1.55}
@@ -17,7 +17,7 @@
     body.landing-page .capacity-field-card input{font-size:16px}
     body.landing-page .capacity-field-card>em{color:#7c8777;font-size:10px;font-style:normal;line-height:1.45}
     body.landing-page .capacity-snapshot{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
-    body.landing-page .capacity-snapshot article{padding:17px;background:#fff;border:1px solid #e1e6e9;border-left:4px solid #c8e063;border-radius:10px}
+    body.landing-page .capacity-snapshot article{padding:17px;background:#fff;border:1px solid #e1e6e9;border-left:4px solid #2563EB;border-radius:10px}
     body.landing-page .capacity-snapshot span,body.landing-page .capacity-snapshot strong{display:block}
     body.landing-page .capacity-snapshot span{color:#7b8794;font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
     body.landing-page .capacity-snapshot strong{margin-top:8px;color:#111;font-size:24px}
@@ -40,6 +40,7 @@
         <a href="{{ route('admin.configurations.event.edit') }}">Event Configurations</a>
         <a class="active" href="{{ route('admin.configurations.capacity.edit') }}" aria-current="page">Occupancy Limit</a>
         <a href="{{ route('admin.configurations.categories.index') }}">Visitor Categories</a>
+        <a href="{{ route('admin.configurations.departments.index') }}">Departments &amp; People</a>
         <a href="{{ route('admin.configurations.users.index') }}">Users &amp; Access</a>
     </nav>
 

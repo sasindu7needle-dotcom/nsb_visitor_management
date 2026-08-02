@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — Traction Guest</title>
+    <title>Admin Login — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
@@ -10,7 +10,7 @@
     <main class="admin-login-shell">
         <div class="admin-login-art" aria-hidden="true">@include('visitor.partials.checkin-illustration')</div>
         <section class="admin-login-card" aria-labelledby="admin-login-title">
-            <a href="{{ url('/') }}" class="admin-brand"><span class="admin-brand-mark"></span><span>TRACTION <strong>GUEST</strong></span></a>
+            <a href="{{ url('/') }}" class="admin-brand"><span class="admin-brand-mark"></span><span>NSB <strong>VISITOR MANAGEMENT</strong></span></a>
             <div class="admin-login-heading">
                 <span class="tagline no-margin">SECURE ADMIN ACCESS</span>
                 <h1 id="admin-login-title" class="headline">Welcome back<span class="dot">.</span></h1>

@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Gate {{ $gate }} {{ strtoupper($direction) }} Scanner — Traction Guest</title>
+    <title>Gate {{ $gate }} {{ strtoupper($direction) }} Scanner — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --lime: #c7e45c;
-            --ink: #111412;
+            --lime: #2563eb;
+            --ink: #0b2f6b;
             --muted: #687382;
             --line: #dce3e8;
-            --paper: #f5f7f4;
+            --paper: #eff6ff;
             --danger: #b42331;
         }
         * { box-sizing: border-box; }
@@ -61,7 +61,7 @@
         .terminal-brand i {
             width: 26px;
             height: 26px;
-            background: linear-gradient(135deg, var(--lime) 0 72%, #ec6767 72%);
+            background: linear-gradient(135deg, #60a5fa 0 72%, #1d4ed8 72%);
             border-radius: 7px;
             flex-shrink: 0;
         }
@@ -84,7 +84,7 @@
             letter-spacing: .08em;
             white-space: nowrap;
         }
-        .terminal-mode.in { color: #344500; background: #eaf5be; }
+        .terminal-mode.in { color: #1e3a8a; background: #dbeafe; }
         .terminal-mode.out { color: #7c252d; background: #ffe0e2; }
 
         .terminal-controls {
@@ -104,16 +104,16 @@
             display: flex;
             align-items: center;
             gap: 9px;
-            color: #52620c;
+            color: #1e3a8a;
             font-size: 12px;
             font-weight: 750;
         }
         .camera-status i {
             width: 9px;
             height: 9px;
-            background: #b8d34c;
+            background: #1D4ED8;
             border-radius: 50%;
-            box-shadow: 0 0 0 4px rgba(184,211,76,.2);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.18);
             flex-shrink: 0;
         }
 
@@ -207,7 +207,7 @@
             width: 64px;
             height: 64px;
             margin: 0 auto 16px;
-            background: #edf4ca;
+            background: #dbeafe;
             border-radius: 50%;
             font-size: 26px;
             font-weight: 800;
@@ -222,8 +222,8 @@
             margin-bottom: 12px;
             padding: 5px 10px;
             border-radius: 999px;
-            background: #edf4ca;
-            color: #455600;
+            background: #dbeafe;
+            color: #1e3a8a;
             font-size: 10px;
             font-weight: 800;
             letter-spacing: .09em;
@@ -310,7 +310,7 @@
         }
         .decision-buttons button:disabled { cursor: wait; opacity: .55; }
         .reject-button { background: #fee4e6; color: #9d2631; }
-        .accept-button { background: var(--lime); color: #273400; }
+        .accept-button { background: var(--lime); color: #fff; }
 
         @media (max-width: 900px) {
             html, body {
@@ -394,7 +394,7 @@
 <body>
 <main class="terminal-shell">
     <header class="terminal-header">
-        <div class="terminal-brand"><i></i><span>TRACTION GUEST</span></div>
+        <div class="terminal-brand"><i></i><span>NSB VISITOR MANAGEMENT</span></div>
         <div class="terminal-heading">
             <h1>Gate {{ $gate }}</h1>
             <span class="terminal-mode {{ $direction }}">{{ strtoupper($direction) }} TERMINAL</span>

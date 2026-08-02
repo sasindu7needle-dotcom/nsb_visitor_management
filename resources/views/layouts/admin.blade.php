@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin') — Traction Guest</title>
+    <title>@yield('title', 'Admin') — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
@@ -13,7 +13,7 @@
 <body class="landing-page admin-dashboard-page">
 <div class="admin-dashboard-shell">
     <aside id="adminSidebar" class="admin-sidebar">
-        <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>TRACTION <strong>GUEST</strong></span></a>
+        <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>NSB <strong>VISITOR MANAGEMENT</strong></span></a>
         <nav aria-label="Admin navigation">
             <a href="{{ route('admin.dashboard') }}" class="admin-nav-link @if(request()->routeIs('admin.dashboard*')) active @endif"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg><span>Dashboard</span></a>
             <a href="{{ route('admin.visitors.index') }}" class="admin-nav-link @if(request()->routeIs('admin.visitors*')) active @endif"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg><span>Visitors</span></a>
@@ -27,6 +27,7 @@
                     <a href="{{ route('admin.configurations.event.edit') }}" class="@if(request()->routeIs('admin.configurations.event*')) active @endif">Event Configurations</a>
                     <a href="{{ route('admin.configurations.capacity.edit') }}" class="@if(request()->routeIs('admin.configurations.capacity*')) active @endif">Occupancy Limit</a>
                     <a href="{{ route('admin.configurations.categories.index') }}" class="@if(request()->routeIs('admin.configurations.categories*')) active @endif">Visitor Categories</a>
+                    <a href="{{ route('admin.configurations.departments.index') }}" class="@if(request()->routeIs('admin.configurations.departments*')) active @endif">Departments &amp; People</a>
                     <a href="{{ route('admin.configurations.users.index') }}" class="@if(request()->routeIs('admin.configurations.users*')) active @endif">Users &amp; Access</a>
                 </div>
             </div>

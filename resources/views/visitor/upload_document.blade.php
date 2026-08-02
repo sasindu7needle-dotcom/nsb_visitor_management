@@ -52,19 +52,19 @@
                             <li class="doc-select__item @if($type === 'nic') doc-select__item--active @endif" data-value="nic" role="option" aria-selected="{{ $type === 'nic' ? 'true' : 'false' }}" tabindex="-1">
                                 <span class="doc-select__item-text">National Identity Card (NIC)</span>
                                 <span class="doc-select__check">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#688009" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </span>
                             </li>
                             <li class="doc-select__item @if($type === 'driving_license') doc-select__item--active @endif" data-value="driving_license" role="option" aria-selected="{{ $type === 'driving_license' ? 'true' : 'false' }}" tabindex="-1">
                                 <span class="doc-select__item-text">Driving License</span>
                                 <span class="doc-select__check">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#688009" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </span>
                             </li>
                             <li class="doc-select__item @if($type === 'passport') doc-select__item--active @endif" data-value="passport" role="option" aria-selected="{{ $type === 'passport' ? 'true' : 'false' }}" tabindex="-1">
                                 <span class="doc-select__item-text">Passport</span>
                                 <span class="doc-select__check">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#688009" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </span>
                             </li>
                         </ul>
@@ -186,7 +186,7 @@
         body.landing-page.upload-document-page .doc-select__trigger:focus-visible,
         body.landing-page.upload-document-page .doc-select.open .doc-select__trigger {
             border-color: #b6cf50;
-            box-shadow: 0 0 0 3px rgba(200, 224, 99, 0.25);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
         }
 
         body.landing-page.upload-document-page .doc-select__icon {
@@ -196,8 +196,8 @@
             width: 30px;
             height: 30px;
             justify-content: center;
-            color: #53620b;
-            background: rgba(200, 224, 99, 0.24);
+            color: #1E3A8A;
+            background: rgba(37, 99, 235, 0.24);
             border-radius: 8px;
         }
 
@@ -270,7 +270,7 @@
 
         body.landing-page.upload-document-page .doc-select__item:hover,
         body.landing-page.upload-document-page .doc-select__item:focus {
-            background: rgba(200, 224, 99, 0.16);
+            background: rgba(37, 99, 235, 0.16);
             color: #111;
             transform: translateX(2px);
         }
@@ -282,7 +282,7 @@
         }
 
         body.landing-page.upload-document-page .doc-select__item--active:hover {
-            background: rgba(200, 224, 99, 0.22);
+            background: rgba(37, 99, 235, 0.22);
         }
 
         body.landing-page.upload-document-page .doc-select__item-text {
@@ -302,7 +302,7 @@
 
         /* ─── Drop Zone ─── */
         body.landing-page.upload-document-page .doc-dropzone {
-            border: 2px dashed #c8e063;
+            border: 2px dashed #2563EB;
             border-radius: 12px;
             min-height: 185px;
             padding: 22px 12px;
@@ -314,7 +314,7 @@
         }
 
         body.landing-page.upload-document-page .doc-dropzone:hover {
-            border-color: #b8d053;
+            border-color: #1D4ED8;
             background: #f6fae8;
         }
 
@@ -336,7 +336,7 @@
             width: 48px;
             height: 48px;
             margin: 0 auto 12px;
-            background: #c8e063;
+            background: #2563EB;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -380,7 +380,7 @@
 
         body.landing-page.upload-document-page .doc-dropzone__change-hint {
             font-size: 11px;
-            color: #688009;
+            color: #1D4ED8;
             font-weight: 600;
             display: block;
             margin-top: 2px;

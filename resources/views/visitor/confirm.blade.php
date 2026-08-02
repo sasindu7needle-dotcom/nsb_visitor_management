@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Your Details — Traction Guest</title>
+    <title>Confirm Your Details — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
@@ -21,7 +21,7 @@
             <div class="registration-heading confirmation-heading">
                 <span class="tagline no-margin">FINAL REVIEW</span>
                 <h1 id="confirmation-title" class="headline">Confirm your details<span class="dot">.</span></h1>
-                <p>Review your verified information and choose how you would like to pay.</p>
+                <p>Review your visitor information and wait for security approval.</p>
             </div>
 
             <div class="confirmation-profile">
@@ -44,20 +44,16 @@
                     @foreach([
                         'full_name' => 'Full Name',
                         'mobile_number' => 'Mobile Number',
-                        'whatsapp_number' => 'WhatsApp Number',
-                        'address' => 'Address',
-                        'occupation' => 'Occupation',
-                        'company' => 'Company',
-                        'entrance_fee' => 'Entrance Fee',
-                        'category' => 'Category'
+                        'department' => 'Department',
+                        'person_to_meet' => 'Person to Meet',
+                        'visitor_count' => 'Number of Visitors',
+                        'expected_gate' => 'Expected Gate'
                     ] as $key => $label)
-                        <div class="confirmation-detail {{ $key === 'address' ? 'confirmation-detail-wide' : '' }}">
+                        <div class="confirmation-detail">
                             <span>{{ $label }}</span>
                             <strong>
-                                @if(in_array($key, ['mobile_number', 'whatsapp_number']))
+                                @if($key === 'mobile_number')
                                     +94 {{ $details[$key] }}
-                                @elseif($key === 'entrance_fee')
-                                    {{ $details[$key] !== null ? 'LKR '.number_format((float) $details[$key], 2) : 'Not assigned' }}
                                 @else
                                     {{ filled($details[$key] ?? null) ? $details[$key] : '—' }}
                                 @endif
@@ -67,42 +63,16 @@
                 </div>
             </div>
 
-            <form action="{{ route('visitor.payment-method') }}" method="POST" class="payment-choice-form">
-                @csrf
-                <fieldset>
-                    <legend>Choose a payment method</legend>
-                    <p class="payment-help">Select how you would like to pay.</p>
+            <div style="margin:0 0 18px;padding:13px 15px;color:#4e5c19;background:#f3f8dc;border:1px solid #d8e69d;border-radius:10px;font-size:11px;font-weight:700;line-height:1.5">
+                Your visit request was sent to the security officer. Gate access remains pending until security selects Allow.
+            </div>
 
-                    <div class="payment-option-grid">
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="visa_master" @checked(old('payment_method') === 'visa_master') required>
-                            <span class="payment-option-indicator"></span>
-                            <span class="payment-option-copy"><strong>Visa / Master</strong><small>Credit or debit card</small></span>
-                            <span class="card-marks"><b>VISA</b><b>MC</b></span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="amex" @checked(old('payment_method') === 'amex') required>
-                            <span class="payment-option-indicator"></span>
-                            <span class="payment-option-copy"><strong>American Express</strong><small>Pay securely by Amex</small></span>
-                            <span class="amex-mark">AMEX</span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="cash" @checked(old('payment_method') === 'cash') required>
-                            <span class="payment-option-indicator"></span>
-                            <span class="payment-option-copy"><strong>Cash</strong><small>Pay at the entrance counter</small></span>
-                            <span class="cash-mark">LKR</span>
-                        </label>
-                    </div>
-                    @error('payment_method')<span class="form-error-msg">{{ $message }}</span>@enderror
-                </fieldset>
-
-                <div class="confirmation-actions">
-                    <a href="{{ route('visitor.create', ['type' => $details['document_type'], 'verified' => 'true']) }}" class="btn-back-link">Back to edit</a>
-                    <button type="submit" class="btn btn-primary btn-large confirmation-pay-button">Continue to payment</button>
-                </div>
-            </form>
+            <div class="confirmation-actions">
+                <a href="{{ route('visitor.create', ['type' => $details['document_type'], 'verified' => 'true']) }}" class="btn-back-link">Back to edit</a>
+                <a href="{{ url('/') }}" class="btn btn-primary btn-large confirmation-pay-button" style="text-decoration:none">Finish</a>
+            </div>
         </section>
-        <footer class="registration-trust">Secure payment routing. Your verified identity details are encrypted and used only for this visit.</footer>
+        <footer class="registration-trust">Your visitor information is stored securely and is visible only to authorized staff.</footer>
     </main>
 </body>
 </html>

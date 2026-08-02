@@ -2,98 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard — Traction Guest</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Admin Dashboard — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <style>
-        body.landing-page .admin-capacity-control{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:16px;min-height:104px;margin:0 0 18px;padding:20px 22px;border:1px solid #dce3e8;border-left:5px solid #c8e063;border-radius:13px;background:linear-gradient(105deg,#f9fce9 0,#fff 48%);box-shadow:0 9px 26px rgba(24,33,46,.06)}
-        body.landing-page .admin-capacity-icon{display:grid;width:46px;height:46px;place-items:center;color:#506400;background:#eaf4b9;border:1px solid #d1e080;border-radius:12px}
-        body.landing-page .admin-capacity-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}
-        body.landing-page .admin-capacity-copy{min-width:0}
-        body.landing-page .admin-capacity-copy>span{display:block;margin-bottom:6px;color:#75830f;font-size:9px;font-weight:800;letter-spacing:.1em}
-        body.landing-page .admin-capacity-copy strong{display:block;color:#172000;font-size:18px;line-height:1.25}
-        body.landing-page .admin-capacity-copy strong b{font-size:24px}
-        body.landing-page .admin-capacity-copy small{display:block;margin-top:5px;color:#75808d;font-size:11px;line-height:1.45}
-        body.landing-page .admin-capacity-form{display:flex;align-items:end;gap:9px}
-        body.landing-page .admin-capacity-form label{display:flex;flex-direction:column;gap:6px;color:#657080;font-size:9px;font-weight:800;letter-spacing:.06em}
-        body.landing-page .admin-capacity-form input{width:136px;height:44px;padding:0 12px;border:1px solid #ccd5dc;border-radius:9px;background:#fff;font:800 14px Inter,sans-serif;outline:none}
-        body.landing-page .admin-capacity-form input:focus{border-color:#aecb37;box-shadow:0 0 0 3px rgba(200,224,99,.25)}
-        body.landing-page .admin-capacity-form button,body.landing-page .admin-capacity-control>.btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;white-space:nowrap}
-        body.landing-page .admin-inside-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}
-        .admin-dashboard-message{margin:0 0 14px;padding:11px 14px;border:1px solid #cbdc83;border-radius:9px;background:#f4f9dd;color:#405000;font-size:12px;font-weight:700}.admin-dashboard-message.error{border-color:#efb7bc;background:#fff0f1;color:#94232d}
-        @media(max-width:900px){body.landing-page .admin-capacity-control{grid-template-columns:46px minmax(0,1fr)}body.landing-page .admin-capacity-form,body.landing-page .admin-capacity-control>.btn{grid-column:1/-1;width:100%}body.landing-page .admin-capacity-form label{flex:1}body.landing-page .admin-capacity-form input{width:100%}}
-        @media(max-width:700px){body.landing-page .admin-inside-breakdown{grid-template-columns:1fr}body.landing-page .admin-capacity-control{grid-template-columns:40px minmax(0,1fr);padding:17px 16px}body.landing-page .admin-capacity-icon{width:40px;height:40px}}
-        @media(max-width:460px){body.landing-page .admin-capacity-form{align-items:stretch;flex-direction:column}body.landing-page .admin-capacity-form button{width:100%}}
+        .admin-dashboard-message{margin:0 0 14px;padding:11px 14px;border:1px solid #93C5FD;border-radius:9px;background:#EFF6FF;color:#1e3a8a;font-size:12px;font-weight:700}.admin-dashboard-message.error{border-color:#efb7bc;background:#fff0f1;color:#94232d}
+        button.admin-stat-card{width:100%;border:0;text-align:left;font-family:inherit;cursor:pointer}button.admin-stat-card:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(20,34,57,.12)}button.admin-stat-card:focus-visible{outline:3px solid #2563EB;outline-offset:3px}
+        .admin-stat-detail{margin:0 0 22px;padding:20px 22px;border:1px solid #dbe3ea;border-radius:13px;background:#fff;box-shadow:0 9px 24px rgba(24,33,46,.06)}.admin-stat-detail[hidden]{display:none}.admin-stat-detail-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}.admin-stat-detail-head span{display:block;color:#2563EB;font-size:9px;font-weight:800;letter-spacing:.09em}.admin-stat-detail-head h2{margin:4px 0 0;color:#17233f;font-size:18px}.admin-stat-detail-close{padding:7px 11px;border:1px solid #cad5e2;border-radius:8px;color:#334155;background:#fff;font:700 11px Inter,sans-serif;cursor:pointer}.admin-stat-detail-close:hover{background:#f1f5f9}.admin-stat-detail-empty{padding:22px;text-align:center;color:#75808d;font-size:12px}
+        .admin-stat-checkout{padding:7px 11px;border:0;border-radius:7px;color:#fff;background:#2563EB;font:700 11px Inter,sans-serif;cursor:pointer}.admin-stat-checkout:hover{background:#1d4ed8}
+        .admin-stat-visitor-link{padding:0;border:0;color:#1d4ed8;background:transparent;font:700 12px Inter,sans-serif;text-align:left;cursor:pointer}.admin-stat-visitor-link:hover{text-decoration:underline}.dashboard-profile-dialog .admin-dialog-grid{margin-top:18px}.dashboard-profile-visits{margin-top:18px}.dashboard-profile-visits>span{display:block;margin-bottom:8px;color:#2563EB;font-size:9px;font-weight:800;letter-spacing:.08em}
     </style>
 </head>
 <body class="landing-page admin-dashboard-page">
     <div class="admin-dashboard-shell">
-        <aside id="adminSidebar" class="admin-sidebar">
-            <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>TRACTION <strong>GUEST</strong></span></a>
-            <nav aria-label="Admin navigation">
-                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link active"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg><span>Dashboard</span></a>
-                <a href="{{ route('admin.visitors.index') }}" class="admin-nav-link"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 1 0 7.75"></path></svg><span>Visitors</span></a>
-                <div class="admin-nav-group @if(request()->routeIs('admin.configurations*')) active @else collapsed @endif">
-                    <button type="button" class="admin-nav-group-title" aria-expanded="{{ request()->routeIs('admin.configurations*') ? 'true' : 'false' }}">
-                        <svg class="admin-nav-group-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34A1.7 1.7 0 0 0 14 20.92V21h-4v-.08A1.7 1.7 0 0 0 9 19.37l-1.94.4-2.83-2.83.4-1.94A1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.63 9l-.4-1.94 2.83-2.83L9 4.63A1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15 4.63l1.94-.4 2.83 2.83-.4 1.94A1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"></path></svg>
-                        <span>Master Configurations</span>
-                        <svg class="admin-nav-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
-                    </button>
-                    <div class="admin-nav-subtabs"><a href="{{ route('admin.configurations.event.edit') }}">Event Configurations</a><a href="{{ route('admin.configurations.capacity.edit') }}">Occupancy Limit</a><a href="{{ route('admin.configurations.categories.index') }}">Visitor Categories</a><a href="{{ route('admin.configurations.users.index') }}">Users &amp; Access</a></div>
-                </div>
-            </nav>
-            <form action="{{ route('admin.logout') }}" method="POST" class="admin-logout-form">@csrf<button type="submit" class="admin-nav-link"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg><span>Sign Out</span></button></form>
-        </aside>
-
         <main class="admin-main">
             <header class="admin-topbar">
-                <button id="adminMenuToggle" class="admin-menu-toggle" aria-label="Open navigation" aria-controls="adminSidebar" aria-expanded="false"><span></span><span></span><span></span></button>
                 <div><span class="tagline no-margin">ADMIN OVERVIEW</span><h1>Visitor Dashboard<span>.</span></h1><p>{{ now()->format('l, F j, Y') }}</p></div>
                 <div class="admin-user-chip"><span>A</span><div><strong>{{ session('admin_username') }}</strong><small>Administrator</small></div></div>
             </header>
 
             <section class="admin-stat-grid" aria-label="Visitor statistics">
                 @foreach([
-                    ['label' => 'Total Visitors', 'value' => $stats['total'], 'tone' => 'lime'],
-                    ['label' => 'Arrivals Today', 'value' => $stats['today'], 'tone' => 'coral'],
-                    ['label' => 'Currently Inside', 'value' => $stats['checked_in'], 'tone' => 'black', 'key' => 'inside'],
-                    ['label' => 'Checked Out', 'value' => $stats['checked_out'], 'tone' => 'slate']
+                    ['id' => 'total', 'label' => 'Total Visitors', 'value' => $stats['total'], 'tone' => 'lime'],
+                    ['id' => 'today', 'label' => 'Arrivals Today', 'value' => $stats['today'], 'tone' => 'coral'],
+                    ['id' => 'inside', 'label' => 'Currently Inside', 'value' => $stats['checked_in'], 'tone' => 'black', 'key' => 'inside'],
+                    ['id' => 'checked_out', 'label' => 'Checked Out', 'value' => $stats['checked_out'], 'tone' => 'slate']
                 ] as $stat)
-                    <article class="admin-stat-card admin-stat-{{ $stat['tone'] }}"><div><span>{{ $stat['label'] }}</span><strong @if(isset($stat['key'])) data-live-count="{{ $stat['key'] }}" @endif>{{ number_format($stat['value']) }}</strong></div><i></i></article>
+                    <button type="button" class="admin-stat-card admin-stat-{{ $stat['tone'] }}" data-stat-details="{{ $stat['id'] }}" aria-controls="stat-detail-{{ $stat['id'] }}" aria-expanded="false"><div><span>{{ $stat['label'] }}</span><strong @if(isset($stat['key'])) data-live-count="{{ $stat['key'] }}" @endif>{{ number_format($stat['value']) }}</strong></div><i></i></button>
                 @endforeach
             </section>
-            @if(session('status'))<div class="admin-dashboard-message" role="status">{{ session('status') }}</div>@endif
-            @error('inside_count')<div class="admin-dashboard-message error" role="alert">{{ $message }}</div>@enderror
-            <section class="admin-capacity-control" aria-label="Event occupancy control">
-                <div class="admin-capacity-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path><path d="M2 21v-2a6 6 0 0 1 12 0v2"></path><path d="M17 8v6M14 11h6"></path></svg>
-                </div>
-                <div class="admin-capacity-copy">
-                    <span>EVENT OCCUPANCY CONTROL</span>
-                    @if($eventConfiguration)
-                        <strong><b data-live-count="inside">{{ number_format($stats['checked_in']) }}</b> of {{ number_format($eventConfiguration->capacity_limit) }} inside</strong>
-                        <small>Changing this number checks eligible visitors in or out and records the movements.</small>
+            @foreach($statDetails as $key => $detail)
+                <section id="stat-detail-{{ $key }}" class="admin-stat-detail" aria-labelledby="stat-detail-title-{{ $key }}" hidden>
+                    <header class="admin-stat-detail-head"><div><span>VISITOR DETAILS</span><h2 id="stat-detail-title-{{ $key }}">{{ $detail['title'] }}</h2></div><button type="button" class="admin-stat-detail-close" data-close-stat-details>Close</button></header>
+                    @if($detail['visitors']->isNotEmpty())
+                        <div class="table-responsive"><table class="admin-table"><thead><tr><th>Visitor</th><th>NIC / ID</th><th>Phone</th><th>Status</th>@if($key === 'inside')<th>Visitor pass ID</th>@endif<th>{{ $detail['time_label'] }}</th>@if($key === 'inside')<th>Action</th>@endif</tr></thead><tbody>@foreach($detail['visitors'] as $visitor)<tr><td><button type="button" class="admin-stat-visitor-link" data-dashboard-profile="{{ $visitor->id }}">{{ $visitor->full_name ?: $visitor->full_name_latin ?: 'Unnamed visitor' }}</button></td><td>{{ $visitor->document_number ?: '—' }}</td><td>{{ $visitor->mobile_number ?: '—' }}</td><td><span class="{{ $visitor->checkin_status ? 'badge-pill-checkedin' : 'badge-pill-checkedout' }}">{{ $visitor->checkin_status ? 'Inside' : 'Outside' }}</span></td>@if($key === 'inside')<td>{{ $visitor->visitor_pass_number ?: '—' }}</td>@endif<td>@if($key === 'inside'){{ $visitor->checked_in_at?->format('M j, g:i A') ?: '—' }}@elseif($key === 'checked_out'){{ $visitor->checked_out_at?->format('M j, g:i A') ?: '—' }}@else{{ ($visitor->verified_at ?: $visitor->created_at)?->format('M j, g:i A') ?: '—' }}@endif</td>@if($key === 'inside')<td><form method="POST" action="{{ route('admin.visitors.checkout', $visitor) }}">@csrf @method('PATCH')<button class="admin-stat-checkout" type="submit">Check out</button></form></td>@endif</tr>@endforeach</tbody></table></div>
                     @else
-                        <strong>Capacity is not configured</strong>
-                        <small>Configure the event capacity before adjusting the inside count.</small>
+                        <p class="admin-stat-detail-empty">No visitor records match this statistic.</p>
                     @endif
-                </div>
-                @if($eventConfiguration)
-                    <form method="POST" action="{{ route('admin.dashboard.inside_count') }}" class="admin-capacity-form">
-                        @csrf @method('PATCH')
-                        <label>SET CURRENTLY INSIDE
-                            <input type="number" name="inside_count" value="{{ old('inside_count', $stats['checked_in']) }}" min="0" max="{{ $eventConfiguration->capacity_limit }}" required>
-                        </label>
-                        <button type="submit" class="btn btn-primary">Update Count</button>
-                    </form>
+                </section>
+            @endforeach
+            @foreach($profileVisitors as $visitor)
+                <dialog id="dashboard-visitor-profile-{{ $visitor->id }}" class="admin-visitor-dialog dashboard-profile-dialog">
+                    <div class="admin-dialog-heading"><div><span>VISITOR PROFILE</span><h2>{{ $visitor->full_name ?: $visitor->full_name_latin ?: 'Visitor details' }}</h2></div><button type="button" data-close-dashboard-profile aria-label="Close">×</button></div>
+                    <div class="admin-dialog-grid">
+                        @foreach([
+                            'NIC / ID' => $visitor->document_number,
+                            'Phone' => $visitor->mobile_number,
+                            'Department' => $visitor->department,
+                            'Person to meet' => $visitor->person_to_meet,
+                            'Registered' => ($visitor->verified_at ?: $visitor->created_at)?->format('M j, Y · g:i A'),
+                            'Current status' => $visitor->checkin_status ? 'INSIDE' : 'OUTSIDE',
+                            'Visitor pass' => $visitor->visitor_pass_number,
+                            'Pass status' => ! $visitor->visitor_pass_issued_at ? 'NOT ISSUED' : ($visitor->visitor_pass_returned_at ? 'RETURNED' : 'ISSUED'),
+                        ] as $label => $value)<div><span>{{ $label }}</span><strong>{{ filled($value) ? $value : '—' }}</strong></div>@endforeach
+                    </div>
+                    <section class="dashboard-profile-visits"><span>COMPLETE VISIT HISTORY</span><div class="table-responsive"><table class="admin-table"><thead><tr><th>Visit date</th><th>Check-in</th><th>Check-out</th><th>Gate</th><th>Duration</th></tr></thead><tbody>@forelse($visitor->activity_rows as $activity)<tr><td>{{ $activity['in']->scanned_at->format('M j, Y') }}</td><td>{{ $activity['in']->scanned_at->format('g:i A') }}</td><td>{{ $activity['out']?->scanned_at?->format('g:i A') ?: 'Inside now' }}</td><td>{{ $activity['in']->gate }}{{ $activity['out'] ? ' / '.$activity['out']->gate : '' }}</td><td>{{ $activity['duration_minutes'] !== null ? intdiv($activity['duration_minutes'], 60).'h '.($activity['duration_minutes'] % 60).'m' : '—' }}</td></tr>@empty<tr><td colspan="5" class="admin-stat-detail-empty">No check-in or checkout history recorded.</td></tr>@endforelse</tbody></table></div></section>
+                    <div class="admin-dialog-actions"><button type="button" class="admin-modal-close-button" data-close-dashboard-profile>Close</button></div>
+                </dialog>
+            @endforeach
+            @if(session('status'))<div class="admin-dashboard-message" role="status">{{ session('status') }}</div>@endif
+            @error('visitor_request')<div class="admin-dashboard-message error" role="alert">{{ $message }}</div>@enderror
+            @error('visitor_pass')<div class="admin-dashboard-message error" role="alert">{{ $message }}</div>@enderror
+            @error('checkout')<div class="admin-dashboard-message error" role="alert">{{ $message }}</div>@enderror
+
+            <section class="security-alerts" aria-labelledby="security-alert-title">
+                <header class="security-alerts-heading">
+                    <div class="security-alerts-heading-copy">
+                        <span class="security-alerts-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                        </span>
+                        <div>
+                            <span class="security-eyebrow">VISITOR APPROVAL QUEUE</span>
+                            <h2 id="security-alert-title">Security Officer — New Visitor Alert</h2>
+                        </div>
+                    </div>
+                    <div class="security-alert-summary">
+                        <span class="security-live-dot" aria-hidden="true"></span>
+                        <strong>{{ $pendingVisitors->count() }} {{ Str::plural('request', $pendingVisitors->count()) }}</strong>
+                        <small>awaiting review</small>
+                    </div>
+                </header>
+                @if($pendingVisitors->isNotEmpty())
+                    <div class="security-alert-grid">
+                        @foreach($pendingVisitors as $visitor)
+                            <article class="security-alert-card">
+                                <div class="security-card-heading">
+                                    <div>
+                                        <span>NEW VISITOR</span>
+                                        <strong>{{ $visitor->full_name ?: 'Unknown visitor' }}</strong>
+                                    </div>
+                                    <span class="security-status">Pending</span>
+                                </div>
+                                <div class="security-visitor">
+                                    @if($visitor->selfie_path)
+                                        <img src="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $visitor->updated_at?->format('Uu')]) }}" alt="Photo of {{ $visitor->full_name }}">
+                                    @else
+                                        <div class="security-avatar">{{ mb_strtoupper(mb_substr($visitor->full_name ?: '?', 0, 1)) }}</div>
+                                    @endif
+                                    <dl class="security-details">
+                                        <dt>NIC / ID</dt><dd>{{ $visitor->document_number ?: 'Not provided' }}</dd>
+                                        <dt>Department</dt><dd>{{ $visitor->department ?: 'Not specified' }}</dd>
+                                        <dt>Person to meet</dt><dd>{{ $visitor->person_to_meet ?: 'Not specified' }}</dd>
+                                        <dt>Visitors</dt><dd>{{ $visitor->visitor_count }}</dd>
+                                        <dt>Phone</dt><dd>{{ $visitor->mobile_number ?: 'Not provided' }}</dd>
+                                        <dt>Gate</dt><dd>{{ $visitor->expected_gate ?: 'Main Gate' }}</dd>
+                                    </dl>
+                                </div>
+                                <div class="security-actions">
+                                    <form method="POST" action="{{ route('admin.dashboard.visitor_requests.decide', $visitor) }}">@csrf @method('PATCH')<input type="hidden" name="decision" value="reject"><button class="security-reject" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"></path></svg>Reject</button></form>
+                                    <form class="security-allow-form" method="POST" action="{{ route('admin.dashboard.visitor_requests.decide', $visitor) }}">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="decision" value="allow">
+                                        <label class="security-pass-number">Visitor pass ID<input name="visitor_pass_number" maxlength="50" placeholder="e.g. VP-014"></label>
+                                        <label class="security-pass-check"><input type="checkbox" name="pass_issued" value="1" checked> <span>Pass handed to visitor</span></label>
+                                        <button class="security-allow" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>Allow entry</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
                 @else
-                    <a href="{{ route('admin.configurations.event.edit') }}" class="btn btn-primary">Set Capacity</a>
+                    <div class="security-empty">
+                        <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"></path><path d="m9 12 2 2 4-4"></path></svg></span>
+                        <div><strong>All requests reviewed</strong><small>No visitors are waiting for security approval.</small></div>
+                    </div>
                 @endif
             </section>
-            <section class="admin-visitor-stat-grid admin-inside-breakdown" aria-label="Currently inside by category">
-                <article><span>Visitors Inside</span><strong data-live-count="visitor">{{ number_format($stats['visitors_inside']) }}</strong></article>
-                <article><span>Exhibitors Inside</span><strong data-live-count="exhibitor">{{ number_format($stats['exhibitors_inside']) }}</strong></article>
-                <article><span>Staff Inside</span><strong data-live-count="staff">{{ number_format($stats['staff_inside']) }}</strong></article>
+
+            <section class="security-alerts returning-face-checks" aria-labelledby="returning-face-check-title">
+                <header class="security-alerts-heading">
+                    <div class="security-alerts-heading-copy">
+                        <span class="security-alerts-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path><path d="m16 12 2 2 3-4"></path></svg>
+                        </span>
+                        <div>
+                            <span class="security-eyebrow">RETURNING VISITOR CHECKS</span>
+                            <h2 id="returning-face-check-title">Face Comparison Results</h2>
+                        </div>
+                    </div>
+                    <div class="security-alert-summary">
+                        <span class="security-live-dot" aria-hidden="true"></span>
+                        <strong>{{ $returningFaceCheckCount }} {{ Str::plural('check', $returningFaceCheckCount) }}</strong>
+                        <small>captured</small>
+                    </div>
+                </header>
+                @if($returningFaceChecks->isNotEmpty())
+                    <div class="security-alert-grid">
+                        @foreach($returningFaceChecks as $faceCheck)
+                            @php $visitor = $faceCheck->visitor; @endphp
+                            <article class="security-alert-card">
+                                <div class="security-card-heading">
+                                    <div>
+                                        <span>RETURNING VISITOR</span>
+                                        <strong>{{ $visitor?->full_name ?: $visitor?->full_name_latin ?: 'Visitor record unavailable' }}</strong>
+                                    </div>
+                                    <span class="security-status return-face-status-{{ $faceCheck->status }}">{{ strtoupper(str_replace('_', ' ', $faceCheck->status)) }}</span>
+                                </div>
+                                <div class="security-visitor">
+                                    <img src="{{ route('admin.visitors.return_face_photo', ['visitor' => $visitor, 'faceCheck' => $faceCheck, 'v' => $faceCheck->updated_at?->format('Uu')]) }}" alt="Return face photo of {{ $visitor?->full_name }}">
+                                    <dl class="security-details">
+                                        <dt>NIC / ID</dt><dd>{{ $faceCheck->nic_number }}</dd>
+                                        <dt>Similarity</dt><dd>{{ $faceCheck->match_score !== null ? number_format((float) $faceCheck->match_score, 2).'%' : 'Security review required' }}</dd>
+                                        <dt>Checked at</dt><dd>{{ $faceCheck->checked_at?->format('M j, Y · g:i A') }}</dd>
+                                        <dt>Result</dt><dd>{{ $faceCheck->status === 'same' ? 'Same face' : ($faceCheck->status === 'different' ? 'Different face' : 'Review required') }}</dd>
+                                    </dl>
+                                </div>
+                                <div class="security-return-actions">
+                                    <a href="{{ route('admin.visitors.index', ['search' => $faceCheck->nic_number]) }}">Open visitor record</a>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="security-empty">
+                        <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+                        <div><strong>No returning visitor checks yet</strong><small>NIC and face comparisons will appear here after a returning visitor completes the camera check.</small></div>
+                    </div>
+                @endif
             </section>
 
             <section class="admin-panel">
@@ -113,29 +199,42 @@
             </section>
         </main>
     </div>
-    <div id="adminSidebarOverlay" class="admin-sidebar-overlay"></div>
     <script>
-        const sidebar = document.querySelector('.admin-sidebar');
-        const menu = document.getElementById('adminMenuToggle');
-        const overlay = document.getElementById('adminSidebarOverlay');
-        const closeMenu = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); menu.setAttribute('aria-expanded', 'false'); };
-        menu.addEventListener('click', () => { const open = sidebar.classList.toggle('open'); overlay.classList.toggle('show', open); menu.setAttribute('aria-expanded', String(open)); });
-        overlay.addEventListener('click', closeMenu);
-        document.querySelectorAll('.admin-nav-group-title').forEach(toggle => {
-            toggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                const group = toggle.closest('.admin-nav-group');
-                if (group) {
-                    const isCollapsed = group.classList.toggle('collapsed');
-                    toggle.setAttribute('aria-expanded', String(!isCollapsed));
-                }
-            });
-        });
+        const dashboardProfileDialogs = [...document.querySelectorAll('.dashboard-profile-dialog')];
+        document.querySelectorAll('[data-dashboard-profile]').forEach(button => button.addEventListener('click', () => {
+            const profile = document.getElementById(`dashboard-visitor-profile-${button.dataset.dashboardProfile}`);
+            if (profile && !profile.open) profile.showModal();
+        }));
+        document.querySelectorAll('[data-close-dashboard-profile]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+        dashboardProfileDialogs.forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); }));
+        const statButtons = [...document.querySelectorAll('[data-stat-details]')];
+        const statDetailSections = [...document.querySelectorAll('.admin-stat-detail')];
+        const closeStatDetails = () => {
+            statDetailSections.forEach(section => section.hidden = true);
+            statButtons.forEach(button => button.setAttribute('aria-expanded', 'false'));
+        };
+        statButtons.forEach(button => button.addEventListener('click', () => {
+            const detail = document.getElementById(`stat-detail-${button.dataset.statDetails}`);
+            const isOpen = detail && !detail.hidden;
+            closeStatDetails();
+            if (!detail || isOpen) return;
+            detail.hidden = false;
+            button.setAttribute('aria-expanded', 'true');
+            detail.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        }));
+        document.querySelectorAll('[data-close-stat-details]').forEach(button => button.addEventListener('click', closeStatDetails));
+        const initialPendingApprovals = {{ $pendingVisitors->count() }};
+        const initialReturningFaceChecks = {{ $returningFaceCheckCount }};
         setInterval(async () => {
             try {
                 const response = await fetch(@json(route('admin.dashboard.counts')), {headers:{Accept:'application/json'}});
                 if (!response.ok) return;
                 const counts = await response.json();
+                if (Number(counts.pending_approvals || 0) !== initialPendingApprovals
+                    || Number(counts.returning_face_checks || 0) !== initialReturningFaceChecks) {
+                    window.location.reload();
+                    return;
+                }
                 document.querySelectorAll('[data-live-count]').forEach(element => element.textContent = Number(counts[element.dataset.liveCount] || 0).toLocaleString());
             } catch (_) {}
         }, 12000);

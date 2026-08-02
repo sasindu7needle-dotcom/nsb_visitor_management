@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cash Payment Confirmation — Traction Guest</title>
+    <title>Cash Payment Confirmation — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <style>
-        body.cash-payment-page .cash-pending-notice { display:grid; gap:5px; margin-top:18px; padding:15px 17px; color:#52601f; background:#f4f8df; border:1px solid #dce6b6; border-radius:12px; text-align:left; }
+        body.cash-payment-page .cash-pending-notice { display:grid; gap:5px; margin-top:18px; padding:15px 17px; color:#52601f; background:#f4f8df; border:1px solid #BFDBFE; border-radius:12px; text-align:left; }
         body.cash-payment-page .cash-pending-notice strong { font-size:13px; }
         body.cash-payment-page .cash-pending-notice span { color:#68734a; font-size:12px; line-height:1.5; }
     </style>

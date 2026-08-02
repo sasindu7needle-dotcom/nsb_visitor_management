@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verified Visitors — Traction Guest</title>
+    <title>Verified Visitors — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 <style>
     body.landing-page .admin-document-sides > div { display:grid; grid-template-columns:repeat(2,minmax(0,180px)); gap:12px; margin-top:8px; }
-    body.landing-page .admin-document-sides a { display:block; padding:7px; color:#53620b; background:#f7faeb; border:1px solid #dce8aa; border-radius:10px; text-align:center; }
+    body.landing-page .admin-document-sides a { display:block; padding:7px; color:#1E3A8A; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; text-align:center; }
     body.landing-page .admin-document-sides img { display:block; width:100%; height:100px; border-radius:7px; object-fit:cover; }
     body.landing-page .admin-document-sides small { display:block; margin-top:5px; font-size:10px; font-weight:800; text-transform:uppercase; }
     body.landing-page .admin-row-actions { display:flex; gap:6px; }
-    body.landing-page .admin-edit-button { padding:7px 11px; border:1px solid #c7da6a; border-radius:7px; background:#fff; color:#4e5c0d; font-size:11px; font-weight:800; cursor:pointer; }
-    body.landing-page .admin-print-button { display:inline-flex; align-items:center; justify-content:center; padding:7px 11px; border:1px solid #aeca37; border-radius:7px; background:#c8e063; color:#273000; font-size:11px; font-weight:800; text-decoration:none; white-space:nowrap; }
+    body.landing-page .admin-edit-button { padding:7px 11px; border:1px solid #93C5FD; border-radius:7px; background:#fff; color:#1e3a8a; font-size:11px; font-weight:800; cursor:pointer; }
+    body.landing-page .admin-print-button { display:inline-flex; align-items:center; justify-content:center; padding:7px 11px; border:1px solid #2563EB; border-radius:7px; background:#2563EB; color:#fff; font-size:11px; font-weight:800; text-decoration:none; white-space:nowrap; }
     body.landing-page .admin-print-disabled { border-color:#d9dfe4; background:#eef1f3; color:#929ba5; cursor:not-allowed; }
-    body.landing-page .admin-header-print-button { position:absolute; top:72px; right:88px; z-index:2; min-height:34px; padding:0 13px; border:1px solid #aeca37; border-radius:8px; background:#c8e063; color:#273000; font-size:10px; font-weight:800; line-height:32px; text-decoration:none; white-space:nowrap; }
+    body.landing-page .admin-header-print-button { position:absolute; top:72px; right:88px; z-index:2; min-height:34px; padding:0 13px; border:1px solid #2563EB; border-radius:8px; background:#2563EB; color:#fff; font-size:10px; font-weight:800; line-height:32px; text-decoration:none; white-space:nowrap; }
     body.landing-page .admin-edit-dialog { width:min(760px,calc(100vw - 28px)); }
     body.landing-page .admin-edit-form { padding:20px 24px 24px; }
     body.landing-page .admin-edit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
     body.landing-page .admin-edit-grid label { display:flex; flex-direction:column; gap:6px; color:#596579; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
     body.landing-page .admin-edit-grid input, body.landing-page .admin-edit-grid select, body.landing-page .admin-edit-grid textarea { width:100%; min-height:42px; padding:9px 11px; border:1px solid #dbe2eb; border-radius:8px; background:#fff; color:#172033; font:500 12px Inter,sans-serif; outline:none; }
-    body.landing-page .admin-edit-grid input:focus, body.landing-page .admin-edit-grid select:focus, body.landing-page .admin-edit-grid textarea:focus { border-color:#b8d34c; box-shadow:0 0 0 3px rgba(200,224,99,.2); }
+    body.landing-page .admin-edit-grid input[readonly] { color:#64748b; background:#f1f5f9; border-color:#e2e8f0; cursor:not-allowed; }
+    body.landing-page .admin-edit-grid input:focus, body.landing-page .admin-edit-grid select:focus, body.landing-page .admin-edit-grid textarea:focus { border-color:#1D4ED8; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
     body.landing-page .admin-edit-grid .wide { grid-column:1/-1; }
     body.landing-page .admin-edit-grid textarea { min-height:76px; resize:vertical; }
     body.landing-page .admin-edit-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; padding-top:16px; border-top:1px solid #edf0f3; }
@@ -40,7 +41,7 @@
     .admin-delete-modal-form { margin:0 !important; padding:0 !important; width:100% !important; }
     .admin-delete-actions-bar { display:flex !important; align-items:center !important; justify-content:flex-end !important; gap:16px !important; width:100% !important; box-sizing:border-box !important; padding:20px 28px 24px !important; margin:0 !important; background:#fbfcfd !important; border-top:1px solid #edf0f3 !important; }
     .btn-keep-visitor { display:inline-flex !important; align-items:center !important; justify-content:center !important; height:44px !important; min-height:44px !important; padding:0 22px !important; color:#344054 !important; background:#ffffff !important; border:1px solid #d0d7de !important; border-radius:10px !important; font-family:Inter,sans-serif !important; font-size:13px !important; font-weight:700 !important; cursor:pointer !important; box-shadow:0 1px 2px rgba(16,24,40,.05) !important; transition:all .15s ease !important; }
-    .btn-keep-visitor:hover { color:#111111 !important; background:#f4f8e5 !important; border-color:#c8dc72 !important; transform:translateY(-1px) !important; }
+    .btn-keep-visitor:hover { color:#111111 !important; background:#EFF6FF !important; border-color:#93C5FD !important; transform:translateY(-1px) !important; }
     .btn-delete-permanently { display:inline-flex !important; align-items:center !important; justify-content:center !important; height:44px !important; min-height:44px !important; padding:0 24px !important; color:#ffffff !important; background:linear-gradient(135deg,#e11d48 0%,#be123c 100%) !important; border:1px solid #b91c1c !important; border-radius:10px !important; font-family:Inter,sans-serif !important; font-size:13px !important; font-weight:700 !important; letter-spacing:.01em !important; cursor:pointer !important; box-shadow:0 4px 14px rgba(225,29,72,.3) !important; transition:all .15s ease !important; }
     .btn-delete-permanently:hover { background:linear-gradient(135deg,#be123c 0%,#9f1239 100%) !important; box-shadow:0 6px 18px rgba(190,18,60,.4) !important; transform:translateY(-1px) !important; }
 
@@ -49,21 +50,21 @@
     body.landing-page .admin-visitor-dialog::backdrop { background:rgba(13,18,16,.62); backdrop-filter:blur(3px); }
     body.landing-page .admin-preview-dialog { width:min(1040px,calc(100vw - 32px)); }
     body.landing-page .admin-edit-dialog { width:min(760px,calc(100vw - 32px)); }
-    body.landing-page .admin-dialog-heading { position:sticky; top:0; z-index:10; min-height:112px; padding:24px 30px; background:linear-gradient(135deg,#f3f9dc 0%,#fbfdf3 58%,#fff 100%); border-bottom:1px solid #dce8ae; box-shadow:0 8px 22px rgba(36,48,16,.08); isolation:isolate; }
+    body.landing-page .admin-dialog-heading { position:sticky; top:0; z-index:10; min-height:112px; padding:24px 30px; background:linear-gradient(135deg,#EFF6FF 0%,#F8FAFF 58%,#fff 100%); border-bottom:1px solid #BFDBFE; box-shadow:0 8px 22px rgba(36,48,16,.08); isolation:isolate; }
     body.landing-page .admin-dialog-heading h2 { max-width:calc(100% - 64px); margin-top:7px; font-size:25px; line-height:1.15; overflow-wrap:anywhere; }
     body.landing-page .admin-dialog-heading button[data-close] { position:relative; display:grid; place-items:center; flex:0 0 42px; width:42px; height:42px; padding:0; color:#566477; background:rgba(255,255,255,.94); border:1px solid #d8e0e7; border-radius:50%; box-shadow:0 5px 14px rgba(24,34,47,.08); font-size:0; line-height:1; cursor:pointer; transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease; }
     body.landing-page .admin-dialog-heading button[data-close]::before, body.landing-page .admin-dialog-heading button[data-close]::after { content:''; position:absolute; width:15px; height:2px; background:currentColor; border-radius:2px; }
     body.landing-page .admin-dialog-heading button[data-close]::before { transform:rotate(45deg); }
     body.landing-page .admin-dialog-heading button[data-close]::after { transform:rotate(-45deg); }
-    body.landing-page .admin-dialog-heading button[data-close]:hover { color:#111; background:#f2f7db; border-color:#c8dc72; transform:rotate(3deg); }
-    body.landing-page .admin-dialog-heading button[data-close]:focus-visible { outline:3px solid rgba(200,224,99,.45); outline-offset:2px; }
+    body.landing-page .admin-dialog-heading button[data-close]:hover { color:#111; background:#EFF6FF; border-color:#93C5FD; transform:rotate(3deg); }
+    body.landing-page .admin-dialog-heading button[data-close]:focus-visible { outline:3px solid rgba(37,99,235,.45); outline-offset:2px; }
     body.landing-page .admin-modal-close-button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:9px 16px; color:#344054; background:#fff; border:1px solid #d8e0e7; border-radius:8px; font-size:11px; font-weight:800; cursor:pointer; transition:background .15s ease,border-color .15s ease,transform .15s ease; }
-    body.landing-page .admin-modal-close-button:hover { color:#111; background:#f4f8e5; border-color:#c8dc72; transform:translateY(-1px); }
+    body.landing-page .admin-modal-close-button:hover { color:#111; background:#EFF6FF; border-color:#93C5FD; transform:translateY(-1px); }
     body.landing-page .admin-status-stack { display:flex; align-items:flex-start; flex-direction:column; gap:6px; }
     body.landing-page .admin-payment-badge, body.landing-page .admin-face-badge { display:inline-flex; align-items:center; gap:6px; min-height:26px; padding:5px 10px; border:1px solid transparent; border-radius:999px; font-size:9px; font-weight:800; letter-spacing:.045em; line-height:1; text-transform:uppercase; white-space:nowrap; }
     body.landing-page .admin-payment-badge::before, body.landing-page .admin-face-badge::before { content:''; width:7px; height:7px; flex:0 0 7px; border-radius:50%; background:currentColor; box-shadow:0 0 0 3px color-mix(in srgb,currentColor 18%,transparent); }
     body.landing-page .admin-payment-pending, body.landing-page .admin-payment-cash_pending, body.landing-page .admin-payment-card_pending { color:#8a5a00; background:#fff9df; border-color:#f1dda0; }
-    body.landing-page .admin-payment-paid { color:#526600; background:#f1f8d4; border-color:#d4e691; }
+    body.landing-page .admin-payment-paid, body.landing-page .admin-payment-not_required { color:#526600; background:#f1f8d4; border-color:#d4e691; }
     body.landing-page .admin-face-status-verified { color:#526600; background:#f1f8d4; border-color:#d4e691; }
     body.landing-page .admin-face-status-pending { color:#735c00; background:#fff9df; border-color:#f1dda0; }
     body.landing-page .admin-face-status-review_required { color:#9a4d00; background:#fff2e4; border-color:#f4c899; }
@@ -91,7 +92,7 @@
 <body class="landing-page admin-dashboard-page">
     <div class="admin-dashboard-shell">
         <aside id="adminSidebar" class="admin-sidebar">
-            <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>TRACTION <strong>GUEST</strong></span></a>
+            <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>NSB <strong>VISITOR MANAGEMENT</strong></span></a>
             <nav aria-label="Admin navigation">
                 <a href="{{ route('admin.dashboard') }}" class="admin-nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg><span>Dashboard</span></a>
                 <a href="{{ route('admin.visitors.index') }}" class="admin-nav-link active"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Visitors</span></a>
@@ -116,7 +117,6 @@
 
             @if(session('status'))<div class="admin-page-alert">{{ session('status') }}</div>@endif
             @error('delete')<div class="admin-page-alert" style="color:#9f252e;background:#fff0f1;border-color:#efc3c6">{{ $message }}</div>@enderror
-            @error('checkin')<div class="admin-page-alert" style="color:#9f252e;background:#fff0f1;border-color:#efc3c6">{{ $message }}</div>@enderror
             @error('badge')<div class="admin-page-alert" style="color:#9f252e;background:#fff0f1;border-color:#efc3c6">{{ $message }}</div>@enderror
             @if($errors->any())<div class="admin-page-alert" style="color:#9f252e;background:#fff0f1;border-color:#efc3c6"><ul style="margin:0;padding-left:18px">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 
@@ -134,7 +134,7 @@
             <section class="admin-panel admin-visitors-panel">
                 <form method="GET" action="{{ route('admin.visitors.index') }}" class="admin-visitor-filters">
                     <div class="admin-search-field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg><input name="search" value="{{ data_get($filters, 'search') }}" placeholder="Search name, NIC, phone or company…" aria-label="Search visitors"></div>
-                    <select name="payment_status" aria-label="Filter by payment"><option value="">All payments</option>@foreach(['pending' => 'Pending', 'cash_pending' => 'Cash pending', 'card_pending' => 'Card pending', 'paid' => 'Paid'] as $value => $label)<option value="{{ $value }}" @selected(data_get($filters, 'payment_status') === $value)>{{ $label }}</option>@endforeach</select>
+                    <select name="payment_status" aria-label="Filter by payment"><option value="">All payments</option>@foreach(['pending' => 'Pending', 'cash_pending' => 'Cash pending', 'card_pending' => 'Card pending', 'paid' => 'Paid', 'not_required' => 'Not required'] as $value => $label)<option value="{{ $value }}" @selected(data_get($filters, 'payment_status') === $value)>{{ $label }}</option>@endforeach</select>
                     <select name="checkin_status" aria-label="Filter by check-in"><option value="">All locations</option><option value="inside" @selected(data_get($filters, 'checkin_status') === 'inside')>Currently inside</option><option value="outside" @selected(data_get($filters, 'checkin_status') === 'outside')>Not inside</option></select>
                     <button class="btn btn-primary" type="submit">Filter</button>
                     @if(request()->hasAny(['search', 'payment_status', 'checkin_status']))<a href="{{ route('admin.visitors.index') }}" class="admin-clear-filter">Clear</a>@endif
@@ -157,7 +157,7 @@
                                     <td><strong class="admin-cell-primary">{{ $visitor->mobile_number ?: '—' }}</strong><small class="admin-cell-secondary">{{ $visitor->company ?: $visitor->occupation ?: 'No company' }}</small></td>
                                     <td><strong class="admin-cell-primary">{{ $visitor->category ?: 'Not assigned' }}</strong><small class="admin-cell-secondary">{{ $visitor->entrance_fee !== null ? 'LKR '.number_format((float)$visitor->entrance_fee, 2) : 'No fee' }}</small></td>
                                     <td><div class="admin-status-stack"><span class="admin-payment-badge admin-payment-{{ $visitor->payment_status }}">{{ strtoupper(str_replace('_', ' ', $visitor->payment_status)) }}</span><small class="admin-status-detail">{{ strtoupper(str_replace('_', ' / ', $visitor->payment_method ?: 'Not selected')) }}</small></div></td>
-                                    <td><div class="admin-status-stack"><span class="admin-face-badge admin-face-status-{{ $visitor->face_verification_status ?: 'pending' }}">{{ ['verified'=>'Face verified','pending'=>'Pending','review_required'=>'Review required','rejected'=>'Rejected'][$visitor->face_verification_status] ?? 'Pending' }}</span><small class="admin-status-detail">{{ $visitor->face_match_score !== null ? number_format((float)$visitor->face_match_score, 1).'% consistency' : 'No live check' }}</small></div></td>
+                                    <td><div class="admin-status-stack">@php $returnCheck = $visitor->latestReturningFaceVerification; @endphp @if($returnCheck)<span class="admin-face-badge {{ $returnCheck->status === 'same' ? 'admin-face-status-verified' : 'admin-face-status-rejected' }}">{{ $returnCheck->status === 'same' ? 'Same face' : ($returnCheck->status === 'different' ? 'Different face' : 'Review required') }}</span><small class="admin-status-detail">Return check {{ $returnCheck->checked_at?->format('M j, g:i A') }}{{ $returnCheck->match_score !== null ? ' · '.number_format((float) $returnCheck->match_score, 1).'%' : '' }}</small>@else<span class="admin-face-badge admin-face-status-{{ $visitor->face_verification_status ?: 'pending' }}">{{ $visitor->face_provider === 'camera_capture' ? 'Photo captured' : (['verified'=>'Face verified','pending'=>'Pending','review_required'=>'Review required','rejected'=>'Rejected'][$visitor->face_verification_status] ?? 'Pending') }}</span><small class="admin-status-detail">No return face check</small>@endif</div></td>
                                     <td>{{ ($visitor->verified_at ?: $visitor->created_at)?->format('M j, Y') }}<small class="admin-cell-secondary">{{ ($visitor->verified_at ?: $visitor->created_at)?->format('g:i A') }}</small></td>
                                     <td><div class="admin-row-actions"><button type="button" class="admin-view-button" data-dialog="visitor-{{ $visitor->id }}">View</button>@if($visitor->face_verification_status === 'verified' && $visitor->selfie_path)<a class="admin-print-button" href="{{ route('admin.visitors.badge', $visitor) }}" target="_blank" rel="noopener">Print</a>@else<span class="admin-print-button admin-print-disabled" title="A verified live photo is required">Print</span>@endif<button type="button" class="admin-edit-button" data-dialog="edit-visitor-{{ $visitor->id }}">Edit</button><button type="button" class="admin-row-delete-button" data-dialog="delete-visitor-{{ $visitor->id }}" aria-label="Delete {{ $visitor->full_name }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg></button></div></td>
                                 </tr>
@@ -171,11 +171,12 @@
                 @foreach($visitors as $visitor)
                     @php
                         $mediaVersion = $visitor->updated_at?->format('Uu') ?: $visitor->id;
+                        $returnCheck = $visitor->latestReturningFaceVerification;
                     @endphp
                     <dialog id="visitor-{{ $visitor->id }}" class="admin-visitor-dialog admin-preview-dialog">
                         <div class="admin-dialog-heading"><div><span>VISITOR PROFILE</span><h2>{{ $visitor->full_name ?: 'Visitor details' }}</h2></div>@if($visitor->face_verification_status === 'verified' && $visitor->selfie_path)<a class="admin-header-print-button" href="{{ route('admin.visitors.badge', $visitor) }}" target="_blank" rel="noopener">Print Card</a>@endif<button type="button" data-close aria-label="Close">×</button></div>
                         <div class="admin-dialog-profile">
-                            <div class="admin-dialog-photo">@if($visitor->selfie_path)<img src="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Live camera photo of {{ $visitor->full_name }}">@elseif($visitor->photo_path)<img src="{{ route('admin.visitors.photo', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Document photo of {{ $visitor->full_name }}">@elseif($visitor->photo_url)<img src="{{ $visitor->photo_url }}" alt="Verified photo of {{ $visitor->full_name }}">@else<span>{{ mb_strtoupper(mb_substr($visitor->full_name ?: '?', 0, 1)) }}</span>@endif<i>{{ $visitor->face_verification_status === 'verified' ? 'FACE VERIFIED' : 'REVIEW' }}</i></div>
+                            <div class="admin-dialog-photo">@if($visitor->selfie_path)<img src="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Live camera photo of {{ $visitor->full_name }}">@elseif($visitor->photo_path)<img src="{{ route('admin.visitors.photo', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Document photo of {{ $visitor->full_name }}">@elseif($visitor->photo_url)<img src="{{ $visitor->photo_url }}" alt="Verified photo of {{ $visitor->full_name }}">@else<span>{{ mb_strtoupper(mb_substr($visitor->full_name ?: '?', 0, 1)) }}</span>@endif<i>{{ $visitor->face_provider === 'camera_capture' ? 'PHOTO CAPTURED' : ($visitor->face_verification_status === 'verified' ? 'FACE VERIFIED' : 'REVIEW') }}</i></div>
                             <div class="admin-dialog-grid">
                                 @foreach([
                                     'Sinhala / Preferred Name' => $visitor->full_name,
@@ -186,6 +187,15 @@
                                     'WhatsApp Number' => $visitor->whatsapp_number,
                                     'Occupation' => $visitor->occupation,
                                     'Company' => $visitor->company,
+                                    'Department' => $visitor->department,
+                                    'Person to Meet' => $visitor->person_to_meet,
+                                    'Number of Visitors' => $visitor->visitor_count,
+                                    'Expected Gate' => $visitor->expected_gate,
+                                    'Visitor Pass ID' => $visitor->visitor_pass_number,
+                                    'Visitor Pass Status' => ! $visitor->visitor_pass_issued_at ? 'NOT ISSUED' : ($visitor->visitor_pass_returned_at ? 'RETURNED' : 'ISSUED — AWAITING RETURN'),
+                                    'Pass Issued At' => $visitor->visitor_pass_issued_at?->format('M j, Y · g:i A'),
+                                    'Pass Returned At' => $visitor->visitor_pass_returned_at?->format('M j, Y · g:i A'),
+                                    'Security Approval' => strtoupper($visitor->approval_status ?: 'approved'),
                                     'Category' => $visitor->category,
                                     'Entrance Fee' => $visitor->entrance_fee !== null ? 'LKR '.number_format((float)$visitor->entrance_fee, 2) : null,
                                     'Payment Method' => strtoupper(str_replace('_', ' / ', $visitor->payment_method ?: '')),
@@ -209,6 +219,15 @@
                                         @if($visitor->back_photo_path)<a href="{{ route('admin.visitors.back_photo', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" target="_blank" rel="noopener"><img src="{{ route('admin.visitors.back_photo', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Back of document"><small>Back</small></a>@endif
                                     </div>
                                 </div>
+                                @if($returnCheck)
+                                    <div class="admin-dialog-wide admin-document-sides">
+                                        <span>Latest returning face comparison — {{ strtoupper(str_replace('_', ' ', $returnCheck->status)) }}{{ $returnCheck->match_score !== null ? ' ('.number_format((float) $returnCheck->match_score, 2).'%)' : '' }}</span>
+                                        <div>
+                                            @if($visitor->selfie_path)<a href="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" target="_blank" rel="noopener"><img src="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Registration face"><small>Registration face</small></a>@endif
+                                            <a href="{{ route('admin.visitors.return_face_photo', ['visitor' => $visitor, 'faceCheck' => $returnCheck, 'v' => $mediaVersion]) }}" target="_blank" rel="noopener"><img src="{{ route('admin.visitors.return_face_photo', ['visitor' => $visitor, 'faceCheck' => $returnCheck, 'v' => $mediaVersion]) }}" alt="Returning visitor face"><small>Return photo · {{ $returnCheck->checked_at?->format('M j, Y g:i A') }}</small></a>
+                                        </div>
+                                    </div>
+                                @endif
                                 <div class="admin-activity-section">
                                     <span>Activity</span>
                                     <div class="table-responsive">
@@ -233,7 +252,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="admin-dialog-actions"><form method="POST" action="{{ route('admin.visitors.checkin', $visitor) }}">@csrf @method('PATCH')<button class="btn {{ $visitor->checkin_status ? 'btn-secondary' : 'btn-primary' }}" type="submit">{{ $visitor->checkin_status ? 'Check Out Visitor' : 'Check In Visitor' }}</button></form><a class="btn btn-primary" href="{{ route('admin.visitors.badge', $visitor) }}" target="_blank" rel="noopener">Print Card</a><button type="button" class="admin-edit-button" data-dialog-switch="edit-visitor-{{ $visitor->id }}">Edit record</button><button type="button" class="admin-modal-close-button" data-close>Close</button></div>
+                        <div class="admin-dialog-actions">@if($visitor->visitor_pass_issued_at && ! $visitor->visitor_pass_returned_at && ! $visitor->checkin_status && $visitor->checked_out_at)<form method="POST" action="{{ route('admin.dashboard.visitor_passes.return', $visitor) }}">@csrf @method('PATCH')<button class="btn btn-secondary" type="submit">✓ Visitor pass returned ({{ $visitor->visitor_pass_number }})</button></form>@endif<a class="btn btn-primary" href="{{ route('admin.visitors.badge', $visitor) }}" target="_blank" rel="noopener">Print Card</a><button type="button" class="admin-edit-button" data-dialog-switch="edit-visitor-{{ $visitor->id }}">Edit record</button><button type="button" class="admin-modal-close-button" data-close>Close</button></div>
                     </dialog>
 
                     <dialog id="edit-visitor-{{ $visitor->id }}" class="admin-visitor-dialog admin-edit-dialog">
@@ -241,19 +260,22 @@
                         <form class="admin-edit-form" method="POST" action="{{ route('admin.visitors.update', $visitor) }}">
                             @csrf @method('PATCH')
                             <div class="admin-edit-grid">
-                                <label>Full name<input name="full_name" value="{{ $visitor->full_name }}"></label>
-                                <label>Document type<select name="document_type"><option value="">Not specified</option>@foreach(['nic'=>'NIC','driving_license'=>'Driving Licence','passport'=>'Passport'] as $value=>$label)<option value="{{ $value }}" @selected($visitor->document_type===$value)>{{ $label }}</option>@endforeach</select></label>
-                                <label>Document number<input name="document_number" value="{{ $visitor->document_number }}"></label>
+                                <label>Full name<input value="{{ $visitor->full_name }}" readonly title="Locked to the verified identity document"></label>
+                                <label>Document type<input value="{{ strtoupper(str_replace('_', ' ', $visitor->document_type ?: 'Not specified')) }}" readonly title="Locked to the verified identity document"></label>
+                                <label>Document number<input value="{{ $visitor->document_number }}" readonly title="Locked to the verified identity document"></label>
                                 <label>Face verification<select name="face_verification_status">@foreach(['pending'=>'Pending','verified'=>'Verified','review_required'=>'Review required','rejected'=>'Rejected'] as $value=>$label)<option value="{{ $value }}" @selected($visitor->face_verification_status===$value)>{{ $label }}</option>@endforeach</select></label>
                                 <label class="wide">Address<textarea name="address">{{ $visitor->address }}</textarea></label>
                                 <label>Mobile number<input name="mobile_number" value="{{ $visitor->mobile_number }}"></label>
                                 <label>WhatsApp number<input name="whatsapp_number" value="{{ $visitor->whatsapp_number }}"></label>
                                 <label>Occupation<input name="occupation" value="{{ $visitor->occupation }}"></label>
                                 <label>Company<input name="company" value="{{ $visitor->company }}"></label>
+                                <label>Department<input name="department" value="{{ $visitor->department }}"></label>
+                                <label>Person to meet<input name="person_to_meet" value="{{ $visitor->person_to_meet }}"></label>
+                                <label>Number of visitors<input name="visitor_count" type="number" min="1" max="20" value="{{ $visitor->visitor_count ?: 1 }}"></label>
                                 <label>Category<input name="category" value="{{ $visitor->category }}"></label>
                                 <label>Entrance fee<input name="entrance_fee" type="number" min="0" step="0.01" value="{{ $visitor->entrance_fee }}"></label>
                                 <label>Payment method<select name="payment_method"><option value="">Not selected</option>@foreach(['cash'=>'Cash','visa_master'=>'Visa / MasterCard','amex'=>'American Express'] as $value=>$label)<option value="{{ $value }}" @selected($visitor->payment_method===$value)>{{ $label }}</option>@endforeach</select></label>
-                                <label>Payment status<select name="payment_status" required>@foreach(['pending'=>'Pending','cash_pending'=>'Cash pending','card_pending'=>'Card pending','paid'=>'Paid'] as $value=>$label)<option value="{{ $value }}" @selected($visitor->payment_status===$value)>{{ $label }}</option>@endforeach</select></label>
+                                <label>Payment status<select name="payment_status" required>@foreach(['pending'=>'Pending','cash_pending'=>'Cash pending','card_pending'=>'Card pending','paid'=>'Paid','not_required'=>'Not required'] as $value=>$label)<option value="{{ $value }}" @selected($visitor->payment_status===$value)>{{ $label }}</option>@endforeach</select></label>
                                 <label>Access status<select name="is_blocked" required><option value="0" @selected(!$visitor->is_blocked)>Allowed</option><option value="1" @selected($visitor->is_blocked)>Blocked</option></select></label>
                             </div>
                             <div class="admin-edit-actions"><button type="button" class="admin-modal-close-button" data-close>Cancel</button><div><button type="submit" class="btn btn-primary">Save changes</button></div></div>

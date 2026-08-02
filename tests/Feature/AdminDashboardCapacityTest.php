@@ -2,102 +2,73 @@
 
 namespace Tests\Feature;
 
-use App\Models\EventConfiguration;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use App\Models\GateLog;
 use App\Models\VerifiedVisitor;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminDashboardCapacityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_adjust_inside_count_and_movements_remain_auditable(): void
+    public function test_dashboard_does_not_offer_manual_occupancy_controls(): void
     {
-        $this->event(3);
-        $visitors = collect([
-            $this->visitor('Visitor One'),
-            $this->visitor('Visitor Two'),
-            $this->visitor('Visitor Three'),
-        ]);
         $session = ['admin_authenticated' => true, 'admin_username' => 'admin'];
 
         $this->withSession($session)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('EVENT OCCUPANCY CONTROL')
-            ->assertSee('Update Count');
+            ->assertDontSee('EVENT OCCUPANCY CONTROL')
+            ->assertDontSee('Capacity is not configured')
+            ->assertDontSee('Visitors Inside')
+            ->assertDontSee('Exhibitors Inside')
+            ->assertDontSee('Staff Inside');
 
-        $this->withSession($session)
-            ->patch(route('admin.dashboard.inside_count'), ['inside_count' => 2])
-            ->assertRedirect(route('admin.dashboard'))
-            ->assertSessionHas('status');
-
-        $this->assertSame(2, GateLog::where('direction', 'in')->count());
-        $this->assertSame(2, $visitors->filter(fn ($visitor) => $visitor->fresh()->checkin_status)->count());
-
-        $this->withSession($session)
-            ->patch(route('admin.dashboard.inside_count'), ['inside_count' => 1])
-            ->assertRedirect(route('admin.dashboard'))
-            ->assertSessionHas('status');
-
-        $latestLogIds = GateLog::query()->selectRaw('MAX(id)')->groupBy('visitor_id');
-        $insideCount = VerifiedVisitor::query()
-            ->whereHas('gateLogs', fn ($query) => $query
-                ->whereIn('id', $latestLogIds)
-                ->where('direction', 'in'))
-            ->count();
-
-        $this->assertSame(1, $insideCount);
-        $this->assertSame(1, GateLog::where('direction', 'out')->count());
+        $this->assertFalse(Route::has('admin.dashboard.inside_count'));
     }
 
-    public function test_dashboard_adjustment_cannot_exceed_capacity_or_available_visitors(): void
+    public function test_dashboard_statistic_cards_expose_the_matching_visitor_details(): void
     {
-        $this->event(2);
-        $this->visitor('Only Eligible Visitor');
-        $session = ['admin_authenticated' => true, 'admin_username' => 'admin'];
-
-        $this->withSession($session)
-            ->from(route('admin.dashboard'))
-            ->patch(route('admin.dashboard.inside_count'), ['inside_count' => 3])
-            ->assertRedirect(route('admin.dashboard'))
-            ->assertSessionHasErrors('inside_count');
-        $this->assertDatabaseCount('gate_logs', 0);
-
-        $this->withSession($session)
-            ->from(route('admin.dashboard'))
-            ->patch(route('admin.dashboard.inside_count'), ['inside_count' => 2])
-            ->assertRedirect(route('admin.dashboard'))
-            ->assertSessionHasErrors('inside_count');
-        $this->assertDatabaseCount('gate_logs', 0);
-    }
-
-    private function event(int $capacity): EventConfiguration
-    {
-        return EventConfiguration::create([
-            'singleton_key' => EventConfiguration::SINGLETON_KEY,
-            'event_name' => 'Capacity Test Event',
-            'event_location' => 'Colombo',
-            'starts_on' => '2026-07-28',
-            'ends_on' => '2026-07-30',
-            'organized_by' => 'Needle',
-            'capacity_limit' => $capacity,
-            'is_active' => true,
-        ]);
-    }
-
-    private function visitor(string $name): VerifiedVisitor
-    {
-        return VerifiedVisitor::create([
-            'verification_id' => (string) Str::uuid(),
-            'full_name' => $name,
-            'registration_status' => 'registered',
-            'payment_status' => 'paid',
-            'face_verification_status' => 'verified',
-            'is_blocked' => false,
+        $visitor = VerifiedVisitor::create([
+            'verification_id' => 'f0e1d2c3-b4a5-4678-9012-123456789012',
+            'full_name' => 'Inside Detail Visitor',
+            'document_number' => '991234567V',
             'verified_at' => now(),
+            'checked_in_at' => now(),
+            'checkin_status' => true,
+            'approval_status' => 'approved',
+        ]);
+        GateLog::create([
+            'visitor_id' => $visitor->id,
+            'gate' => 'ADMIN',
+            'direction' => 'in',
+            'scanned_at' => now(),
+        ]);
+
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('data-stat-details="inside"', false)
+            ->assertSee('Visitors Currently Inside')
+            ->assertSee('Inside Detail Visitor')
+            ->assertSee('991234567V')
+            ->assertSee(route('admin.visitors.checkout', $visitor), false)
+            ->assertSee('Check out')
+            ->assertSee('data-dashboard-profile="'.$visitor->id.'"', false)
+            ->assertSee('COMPLETE VISIT HISTORY')
+            ->assertSee('Inside now');
+
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->from(route('admin.dashboard'))
+            ->patch(route('admin.visitors.checkout', $visitor))
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->assertFalse($visitor->fresh()->checkin_status);
+        $this->assertDatabaseHas('gate_logs', [
+            'visitor_id' => $visitor->id,
+            'gate' => 'ADMIN',
+            'direction' => 'out',
         ]);
     }
 }

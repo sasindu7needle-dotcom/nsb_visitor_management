@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Identity — Traction Guest</title>
+    <title>Verify Identity — NSB Visitor Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
@@ -18,8 +18,8 @@
             transform: none !important;
         }
         body.landing-page .btn-continue-initial:not(.disabled-link) {
-            background: #c8e063 !important;
-            color: #111827 !important;
+            background: #2563EB !important;
+            color: #ffffff !important;
             font-weight: 800 !important;
             opacity: 1 !important;
             pointer-events: auto !important;
@@ -65,7 +65,7 @@
                     
                     <div class="privacy-governance-box">
                         <h4>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#688009" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                             Google Tesseract OCR Privacy & Data Governance
                         </h4>
                         <p>
@@ -105,7 +105,7 @@
                 <!-- Pod 1: Back-left -->
                 <g class="bobbing-pod-1">
                     <g transform="translate(180, 80)">
-                        <path d="M0 80 L100 130 L200 80 L100 30 Z" fill="#c8e063"/>
+                        <path d="M0 80 L100 130 L200 80 L100 30 Z" fill="#2563EB"/>
                         <path d="M0 80 L100 30 L100 0 L0 50 Z" fill="#2a2a2a"/>
                         <path d="M100 130 L200 80 L200 50 L100 100 Z" fill="#1f1f1f"/>
                         <path d="M100 30 L100 80 L130 65 L130 15 Z" fill="#e85d5d"/>
@@ -123,7 +123,7 @@
                 <!-- Pod 2: Center-left -->
                 <g class="bobbing-pod-2">
                     <g transform="translate(420, 160)">
-                        <path d="M0 100 L140 170 L280 100 L140 30 Z" fill="#c8e063"/>
+                        <path d="M0 100 L140 170 L280 100 L140 30 Z" fill="#2563EB"/>
                         <path d="M0 100 L140 30 L140 0 L0 70 Z" fill="#2a2a2a"/>
                         <path d="M140 170 L280 100 L280 70 L140 140 Z" fill="#1f1f1f"/>
                         <path d="M140 30 L140 100 L175 82 L175 12 Z" fill="#e85d5d"/>
@@ -144,7 +144,7 @@
                 <!-- Pod 3: Back-right -->
                 <g class="bobbing-pod-3">
                     <g transform="translate(620, 100)">
-                        <path d="M0 60 L70 95 L140 60 L70 25 Z" fill="#c8e063"/>
+                        <path d="M0 60 L70 95 L140 60 L70 25 Z" fill="#2563EB"/>
                         <path d="M0 60 L70 25 L70 5 L0 40 Z" fill="#2a2a2a"/>
                         <path d="M70 95 L140 60 L140 40 L70 75 Z" fill="#1f1f1f"/>
                         <path d="M70 25 L70 80 L95 67 L95 12 Z" fill="#e85d5d"/>
@@ -158,7 +158,7 @@
                 <!-- Pod 4: Front-right -->
                 <g class="bobbing-pod-4">
                     <g transform="translate(580, 280)">
-                        <path d="M0 80 L100 130 L200 80 L100 30 Z" fill="#c8e063"/>
+                        <path d="M0 80 L100 130 L200 80 L100 30 Z" fill="#2563EB"/>
                         <path d="M0 80 L100 30 L100 5 L0 55 Z" fill="#2a2a2a"/>
                         <path d="M100 130 L200 80 L200 55 L100 105 Z" fill="#1f1f1f"/>
                         <path d="M100 30 L100 90 L130 75 L130 15 Z" fill="#e85d5d"/>
@@ -175,7 +175,7 @@
                 <!-- Pod 5: Far-right -->
                 <g class="bobbing-pod-5">
                     <g transform="translate(760, 200)">
-                        <path d="M0 80 L50 105 L100 80 L50 55 Z" fill="#c8e063"/>
+                        <path d="M0 80 L50 105 L100 80 L50 55 Z" fill="#2563EB"/>
                         <path d="M0 80 L50 55 L50 35 L0 60 Z" fill="#2a2a2a"/>
                         <path d="M50 105 L100 80 L100 60 L50 85 Z" fill="#1f1f1f"/>
                         <circle cx="55" cy="80" r="5" fill="#111"/>
