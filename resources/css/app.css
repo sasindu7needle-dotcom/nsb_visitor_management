@@ -2480,14 +2480,10 @@ body.landing-page .admin-auth-success {
     border-color: rgba(37, 99, 235, .3);
 }
 
-body.landing-page .admin-dashboard-shell {
+body.landing-page.admin-dashboard-page .admin-dashboard-shell {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
     min-height: 100vh;
-}
-
-body.landing-page.admin-dashboard-page .admin-dashboard-shell {
-    display: block;
 }
 
 body.landing-page .admin-sidebar {
@@ -2496,6 +2492,9 @@ body.landing-page .admin-sidebar {
     z-index: 20;
     display: flex;
     flex-direction: column;
+    width: 240px;
+    min-width: 240px;
+    box-sizing: border-box;
     height: 100vh;
     padding: 28px 18px 20px;
     color: #fff;
@@ -3308,8 +3307,52 @@ body.landing-page .admin-sidebar-overlay {
     }
 }
 
-@media (max-width: 780px) {
-    body.landing-page .admin-dashboard-shell {
+/* Keep navigation and content side-by-side on tablets. */
+@media (min-width: 641px) and (max-width: 780px) {
+    body.landing-page.admin-dashboard-page .admin-dashboard-shell {
+        grid-template-columns: 192px minmax(0, 1fr);
+    }
+
+    body.landing-page .admin-sidebar {
+        width: 192px;
+        min-width: 192px;
+        padding: 22px 12px 16px;
+    }
+
+    body.landing-page .admin-sidebar-brand {
+        margin: 0 6px 28px;
+    }
+
+    body.landing-page .admin-nav-link {
+        gap: 9px;
+        padding: 10px 9px;
+        font-size: 11px;
+    }
+
+    body.landing-page .admin-main {
+        padding: 24px 18px 36px;
+    }
+
+    body.landing-page .admin-topbar {
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    body.landing-page .admin-topbar h1 {
+        font-size: clamp(28px, 5vw, 34px);
+    }
+
+    body.landing-page .admin-visitor-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.landing-page .admin-visitor-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    body.landing-page.admin-dashboard-page .admin-dashboard-shell {
         display: block;
     }
 
@@ -3581,7 +3624,8 @@ body.landing-page .admin-record-index {
     font-weight: 800;
 }
 
-body.landing-page .admin-visitors-table .admin-visitor-cell img {
+body.landing-page .admin-visitors-table .admin-visitor-cell img,
+body.landing-page .admin-recent-visitors-table .admin-visitor-cell img {
     width: 38px;
     height: 38px;
     flex: 0 0 auto;
@@ -3956,7 +4000,7 @@ body.landing-page .admin-login-button {
     touch-action: manipulation;
 }
 
-@media (max-width: 780px) {
+@media (max-width: 640px) {
     body.landing-page .admin-sidebar {
         height: 100vh;
         height: 100dvh;

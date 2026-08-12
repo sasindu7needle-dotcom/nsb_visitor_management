@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminEventConfigurationController;
 use App\Http\Controllers\AdminVisitorCategoryController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminDepartmentDirectoryController;
+use App\Http\Controllers\AdminAppointmentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,6 +24,7 @@ Route::get('/visitor/returning', [ReturningVisitorController::class, 'show'])->n
 Route::post('/api/visitor/returning/find', [ReturningVisitorController::class, 'findByNic'])->middleware('throttle:20,1')->name('visitor.returning.find');
 Route::post('/api/visitor/returning/compare', [ReturningVisitorController::class, 'captureAndCompare'])->middleware('throttle:10,1')->name('visitor.returning.compare');
 Route::get('/visitor/create', [VisitorController::class, 'create'])->name('visitor.create');
+Route::get('/visitor/appointments/{appointment}/{token}', [VisitorController::class, 'startAppointment'])->name('visitor.appointments.start');
 Route::get('/visitor/upload-document', [VisitorController::class, 'showUploadDocument'])->name('visitor.upload_document');
 Route::get('/visitor/live-face-check', [VisitorController::class, 'showLiveFaceCheck'])->name('visitor.live_face');
 Route::get('/visitor/session-photo/{type?}', [VisitorController::class, 'sessionPhoto'])->name('visitor.session_photo');
@@ -78,6 +80,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/configurations/departments/people', [AdminDepartmentDirectoryController::class, 'storePerson'])->name('configurations.departments.people.store');
         Route::patch('/configurations/departments/people/{person}/toggle', [AdminDepartmentDirectoryController::class, 'togglePerson'])->name('configurations.departments.people.toggle');
         Route::delete('/configurations/departments/people/{person}', [AdminDepartmentDirectoryController::class, 'destroyPerson'])->name('configurations.departments.people.destroy');
+        Route::get('/appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+        Route::post('/appointments', [AdminAppointmentController::class, 'store'])->name('appointments.store');
+        Route::patch('/appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.status');
         Route::get('/visitors', [AdminVisitorController::class, 'index'])->name('visitors.index');
         Route::get('/visitors/{visitor}', fn (VerifiedVisitor $visitor) => redirect()->route('admin.visitors.index'))->name('visitors.show');
         Route::patch('/visitors/{visitor}/checkout', [AdminVisitorController::class, 'checkout'])->name('visitors.checkout');

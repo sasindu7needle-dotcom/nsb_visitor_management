@@ -47,6 +47,7 @@
                         'department' => 'Department',
                         'person_to_meet' => 'Person to Meet',
                         'visitor_count' => 'Number of Visitors',
+                        'purpose' => 'Purpose of Visit',
                         'expected_gate' => 'Expected Gate'
                     ] as $key => $label)
                         <div class="confirmation-detail">

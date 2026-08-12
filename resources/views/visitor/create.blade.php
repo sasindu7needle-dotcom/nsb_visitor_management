@@ -22,8 +22,8 @@
         .verified-tick{display:inline-flex!important;width:max-content;align-items:center;margin-top:8px!important;padding:4px 8px;color:#426300!important;background:#edf7c6;border-radius:99px;font-size:9px!important}
         .visit-request-form{display:grid;gap:15px;padding:21px 24px 25px}
         .visit-field{display:grid;gap:7px}.visit-field>span{color:#273246;font-size:11px;font-weight:800}
-        .visit-field select,.visit-field input{width:100%;height:46px;padding:0 13px;color:#172033;background:#fff;border:1px solid #ced7e1;border-radius:10px;font:600 13px Inter,sans-serif;outline:none;box-sizing:border-box}
-        .visit-field select:focus,.visit-field input:focus{border-color:#7ea7ff;box-shadow:0 0 0 3px rgba(51,111,238,.12)}
+        .visit-field select,.visit-field input,.visit-field textarea{width:100%;height:46px;padding:0 13px;color:#172033;background:#fff;border:1px solid #ced7e1;border-radius:10px;font:600 13px Inter,sans-serif;outline:none;box-sizing:border-box}
+        .visit-field textarea{height:92px;padding-top:12px;resize:vertical}.visit-field select:focus,.visit-field input:focus,.visit-field textarea:focus{border-color:#7ea7ff;box-shadow:0 0 0 3px rgba(51,111,238,.12)}
         .phone-entry{display:grid;grid-template-columns:58px 1fr}.phone-entry b{display:grid;height:46px;place-items:center;color:#4e5b6b;background:#f1f4f7;border:1px solid #ced7e1;border-right:0;border-radius:10px 0 0 10px;font-size:12px}.phone-entry input{border-radius:0 10px 10px 0}
         .visitor-counter{display:grid;grid-template-columns:46px 1fr 46px;gap:8px}.visitor-counter button{height:46px;color:#214fb2;background:#eef4ff;border:1px solid #cbd9f4;border-radius:10px;font-size:23px;cursor:pointer}.visitor-counter input{text-align:center;font-size:16px;font-weight:800}
         .visit-submit{height:50px;margin-top:3px;color:#fff;background:#1769ed;border:0;border-radius:11px;box-shadow:0 9px 20px rgba(23,105,237,.27);font:800 14px Inter,sans-serif;cursor:pointer}
@@ -35,10 +35,17 @@
 <main class="visit-request-shell">
     <section class="visit-request-card" aria-labelledby="visit-title">
         <header class="visit-request-top">
-            <span>PROFILE PHOTO CAPTURED</span>
+            <span>{{ $appointment ? 'SCHEDULED APPOINTMENT' : 'PROFILE PHOTO CAPTURED' }}</span>
             <h1 id="visit-title">Who are you visiting?</h1>
-            <p>Complete the visit details for security approval.</p>
+            <p>{{ $appointment ? 'Your booking details have been reserved by NSB.' : 'Complete the visit details for security approval.' }}</p>
         </header>
+
+        @if($appointment)
+            <div style="margin:18px 24px 0;padding:13px 14px;background:#eef4ff;border:1px solid #cbd9f4;border-radius:10px;color:#1d4ed8;font-size:11px;line-height:1.55">
+                <strong>{{ $appointment->reference }}</strong><br>
+                Arrival: {{ $appointment->scheduled_at->format('D, d M Y, h:i A') }}
+            </div>
+        @endif
 
         <div class="verified-person">
             <img src="{{ route('visitor.session_photo', ['type' => 'selfie']) }}" alt="Captured profile photo" onerror="this.onerror=null;this.src='{{ route('visitor.session_photo', ['type' => 'photo']) }}'">
@@ -62,6 +69,10 @@
             $hasReliableRecordedName = count(preg_split('/\s+/', trim((string) $recordedName), -1, PREG_SPLIT_NO_EMPTY)) >= 2
                 && $nameLetterCount >= 6
                 && preg_match('/[A-Za-z]{3}/', (string) $recordedName);
+            $appointmentPhone = preg_replace('/\D+/', '', (string) ($appointment?->phone ?? ''));
+            $appointmentPhone = str_starts_with($appointmentPhone, '94') ? substr($appointmentPhone, 2) : $appointmentPhone;
+            $appointmentPhone = str_starts_with($appointmentPhone, '0') ? substr($appointmentPhone, 1) : $appointmentPhone;
+            $appointmentPhone = substr($appointmentPhone, -9);
         @endphp
         <form method="POST" action="{{ route('visitor.confirm') }}" class="visit-request-form">
             @csrf
@@ -81,30 +92,36 @@
                 @error('document_number')<small class="form-error-msg">{{ $message }}</small>@enderror
             </label>
 
-            <label class="visit-field">
-                <span>Department *</span>
-                <select id="departmentSelect" name="department" required>
-                    <option value="" disabled @selected(!old('department'))>Select department</option>
-                    @foreach($departments as $department)
-                        <option value="{{ $department->name }}" @selected(old('department') === $department->name)>{{ $department->name }}</option>
-                    @endforeach
-                </select>
-                @error('department')<small class="form-error-msg">{{ $message }}</small>@enderror
-            </label>
-
-            <label class="visit-field">
-                <span>Person to meet *</span>
-                <select id="personSelect" name="person_to_meet" required disabled>
-                    <option value="" selected>Select department first</option>
-                </select>
-                @error('person_to_meet')<small class="form-error-msg">{{ $message }}</small>@enderror
-            </label>
+            @if($appointment)
+                <label class="visit-field"><span>Department</span><input value="{{ $appointment->department?->name }}" readonly><small style="color:#7b8797;font-size:9px">Reserved by NSB for this appointment.</small></label>
+                <label class="visit-field"><span>Person to meet</span><input value="{{ $appointment->personToMeet?->name ?? 'No specific person' }}" readonly><small style="color:#7b8797;font-size:9px">Reserved by NSB for this appointment.</small></label>
+            @else
+                <label class="visit-field">
+                    <span>Department *</span>
+                    <select id="departmentSelect" name="department" required>
+                        <option value="" disabled @selected(!old('department'))>Select department</option>
+                        @foreach($departments as $department)<option value="{{ $department->name }}" @selected(old('department') === $department->name)>{{ $department->name }}</option>@endforeach
+                    </select>
+                    @error('department')<small class="form-error-msg">{{ $message }}</small>@enderror
+                </label>
+                <label class="visit-field">
+                    <span>Person to meet *</span>
+                    <select id="personSelect" name="person_to_meet" required disabled><option value="" selected>Select department first</option></select>
+                    @error('person_to_meet')<small class="form-error-msg">{{ $message }}</small>@enderror
+                </label>
+            @endif
 
             <label class="visit-field">
                 <span>Mobile number *</span>
-                <span class="phone-entry"><b>+94</b><input id="mobileNumber" name="mobile_number" type="tel" inputmode="numeric" maxlength="9" value="{{ old('mobile_number') }}" placeholder="77 123 4567" required autocomplete="tel"></span>
+                <span class="phone-entry"><b>+94</b><input id="mobileNumber" name="mobile_number" type="tel" inputmode="numeric" maxlength="9" value="{{ old('mobile_number', $appointmentPhone) }}" placeholder="77 123 4567" required autocomplete="tel"></span>
                 <small style="color:#7b8797;font-size:9px">WhatsApp contact: Same as Mobile</small>
                 @error('mobile_number')<small class="form-error-msg">{{ $message }}</small>@enderror
+            </label>
+
+            <label class="visit-field">
+                <span>Purpose of visit *</span>
+                <textarea name="purpose" maxlength="1000" required placeholder="Briefly describe the meeting or service needed.">{{ old('purpose') }}</textarea>
+                @error('purpose')<small class="form-error-msg">{{ $message }}</small>@enderror
             </label>
 
             <label class="visit-field">
@@ -144,8 +161,10 @@
         personSelect.disabled = people.length === 0;
     };
 
-    departmentSelect.addEventListener('change', populatePeople);
-    populatePeople();
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', populatePeople);
+        populatePeople();
+    }
 
     const visitorCount = document.getElementById('visitorCount');
     document.getElementById('visitorMinus').addEventListener('click', () => visitorCount.value = Math.max(1, Number(visitorCount.value) - 1));

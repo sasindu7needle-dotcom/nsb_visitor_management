@@ -1,11 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Admin Dashboard — NSB Visitor Management</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
+@extends('layouts.admin')
+
+@section('title', 'Admin Dashboard')
+
+@section('header')
+    <div>
+        <span class="tagline no-margin">ADMIN OVERVIEW</span>
+        <h1>Visitor Dashboard<span>.</span></h1>
+        <p>{{ now()->format('l, F j, Y') }}</p>
+    </div>
+@endsection
+
+@section('content')
     <style>
         .admin-dashboard-message{margin:0 0 14px;padding:11px 14px;border:1px solid #93C5FD;border-radius:9px;background:#EFF6FF;color:#1e3a8a;font-size:12px;font-weight:700}.admin-dashboard-message.error{border-color:#efb7bc;background:#fff0f1;color:#94232d}
         button.admin-stat-card{width:100%;border:0;text-align:left;font-family:inherit;cursor:pointer}button.admin-stat-card:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(20,34,57,.12)}button.admin-stat-card:focus-visible{outline:3px solid #2563EB;outline-offset:3px}
@@ -13,15 +18,6 @@
         .admin-stat-checkout{padding:7px 11px;border:0;border-radius:7px;color:#fff;background:#2563EB;font:700 11px Inter,sans-serif;cursor:pointer}.admin-stat-checkout:hover{background:#1d4ed8}
         .admin-stat-visitor-link{padding:0;border:0;color:#1d4ed8;background:transparent;font:700 12px Inter,sans-serif;text-align:left;cursor:pointer}.admin-stat-visitor-link:hover{text-decoration:underline}.dashboard-profile-dialog .admin-dialog-grid{margin-top:18px}.dashboard-profile-visits{margin-top:18px}.dashboard-profile-visits>span{display:block;margin-bottom:8px;color:#2563EB;font-size:9px;font-weight:800;letter-spacing:.08em}
     </style>
-</head>
-<body class="landing-page admin-dashboard-page">
-    <div class="admin-dashboard-shell">
-        <main class="admin-main">
-            <header class="admin-topbar">
-                <div><span class="tagline no-margin">ADMIN OVERVIEW</span><h1>Visitor Dashboard<span>.</span></h1><p>{{ now()->format('l, F j, Y') }}</p></div>
-                <div class="admin-user-chip"><span>A</span><div><strong>{{ session('admin_username') }}</strong><small>Administrator</small></div></div>
-            </header>
-
             <section class="admin-stat-grid" aria-label="Visitor statistics">
                 @foreach([
                     ['id' => 'total', 'label' => 'Total Visitors', 'value' => $stats['total'], 'tone' => 'lime'],
@@ -185,11 +181,12 @@
             <section class="admin-panel">
                 <div class="admin-panel-heading"><div><span>LIVE RECORDS</span><h2>Recent visitors</h2></div><a href="{{ route('admin.visitors.index') }}">View all <span>→</span></a></div>
                 <div class="table-responsive">
-                    <table class="admin-table">
+                    <table class="admin-table admin-recent-visitors-table">
                         <thead><tr><th>Visitor</th><th>Phone</th><th>Purpose</th><th>Arrival</th><th>Status</th></tr></thead>
                         <tbody>
                             @forelse($recentVisitors as $visitor)
-                                <tr><td><div class="admin-visitor-cell"><span>{{ mb_strtoupper(mb_substr($visitor->full_name ?: '?', 0, 1)) }}</span><div><strong>{{ $visitor->full_name ?: 'Unnamed visitor' }}</strong><small>{{ $visitor->document_number ?: 'No document number' }}</small></div></div></td><td>{{ $visitor->mobile_number ?: '—' }}</td><td class="admin-purpose-cell">{{ $visitor->occupation ?: '—' }}{{ $visitor->company ? ' · '.$visitor->company : '' }}</td><td>{{ ($visitor->verified_at ?: $visitor->created_at)?->format('M j, g:i A') }}</td><td><span class="{{ $visitor->checkin_status ? 'badge-pill-checkedin' : 'badge-pill-checkedout' }}">{{ $visitor->checkin_status ? 'Inside' : 'Not inside' }}</span></td></tr>
+                                @php($mediaVersion = $visitor->updated_at?->format('Uu') ?: $visitor->id)
+                                <tr><td><div class="admin-visitor-cell">@if($visitor->selfie_path)<img src="{{ route('admin.visitors.selfie', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Photo of {{ $visitor->full_name }}">@elseif($visitor->photo_path)<img src="{{ route('admin.visitors.photo', ['visitor' => $visitor, 'v' => $mediaVersion]) }}" alt="Photo of {{ $visitor->full_name }}">@elseif($visitor->photo_url)<img src="{{ $visitor->photo_url }}" alt="Photo of {{ $visitor->full_name }}">@else<span>{{ mb_strtoupper(mb_substr($visitor->full_name ?: '?', 0, 1)) }}</span>@endif<div><strong>{{ $visitor->full_name ?: 'Unnamed visitor' }}</strong><small>{{ $visitor->document_number ?: 'No document number' }}</small></div></div></td><td>{{ $visitor->mobile_number ?: '—' }}</td><td class="admin-purpose-cell">{{ $visitor->occupation ?: '—' }}{{ $visitor->company ? ' · '.$visitor->company : '' }}</td><td>{{ ($visitor->verified_at ?: $visitor->created_at)?->format('M j, g:i A') }}</td><td><span class="{{ $visitor->checkin_status ? 'badge-pill-checkedin' : 'badge-pill-checkedout' }}">{{ $visitor->checkin_status ? 'Inside' : 'Not inside' }}</span></td></tr>
                             @empty
                                 <tr><td colspan="5" class="admin-empty-state">No visitor records yet.</td></tr>
                             @endforelse
@@ -197,9 +194,10 @@
                     </table>
                 </div>
             </section>
-        </main>
-    </div>
-    <script>
+@endsection
+
+@push('scripts')
+<script>
         const dashboardProfileDialogs = [...document.querySelectorAll('.dashboard-profile-dialog')];
         document.querySelectorAll('[data-dashboard-profile]').forEach(button => button.addEventListener('click', () => {
             const profile = document.getElementById(`dashboard-visitor-profile-${button.dataset.dashboardProfile}`);
@@ -238,6 +236,5 @@
                 document.querySelectorAll('[data-live-count]').forEach(element => element.textContent = Number(counts[element.dataset.liveCount] || 0).toLocaleString());
             } catch (_) {}
         }, 12000);
-    </script>
-</body>
-</html>
+</script>
+@endpush

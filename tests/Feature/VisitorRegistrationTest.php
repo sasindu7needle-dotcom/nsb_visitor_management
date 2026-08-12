@@ -37,6 +37,7 @@ class VisitorRegistrationTest extends TestCase
             ->assertSee('12 Galle Road, Colombo')
             ->assertSee('LKR 1,500.00')
             ->assertSee('Same as Mobile')
+            ->assertSee('Purpose of visit')
             ->assertSee('Next');
     }
 
@@ -55,6 +56,7 @@ class VisitorRegistrationTest extends TestCase
             'department' => 'Finance Department',
             'person_to_meet' => 'Ms. Nirosha Fernando',
             'visitor_count' => 1,
+            'purpose' => 'Account review meeting',
             'full_name' => 'Tampered Name',
             'document_number' => '000000000000',
             'address' => 'Tampered Address',
@@ -127,6 +129,7 @@ class VisitorRegistrationTest extends TestCase
                 'department' => 'Finance Department',
                 'person_to_meet' => 'Ms. Nirosha Fernando',
                 'visitor_count' => 1,
+                'purpose' => 'Account review meeting',
             ])->assertRedirect()
             ->assertSessionHasErrors(['mobile_number', 'whatsapp_number']);
     }

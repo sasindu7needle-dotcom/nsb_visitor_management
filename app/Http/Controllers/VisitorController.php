@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Visitor;
 use App\Models\VerifiedVisitor;
 use App\Models\Department;
+use App\Models\VisitorAppointment;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -25,6 +26,7 @@ class VisitorController extends Controller
             'didit_verification',
             'visitor_registration',
             'visitor_category',
+            'appointment_registration_id',
         ]);
 
         return redirect()->route('visitor.create');
@@ -65,7 +67,32 @@ class VisitorController extends Controller
                 ->get()
             : $this->legacyDepartments();
 
-        return view('visitor.create', compact('type', 'verification', 'category', 'departments'));
+        $appointment = $this->activeAppointment($request);
+
+        return view('visitor.create', compact('type', 'verification', 'category', 'departments', 'appointment'));
+    }
+
+    /**
+     * Begin the identity-verification journey from the unique link emailed
+     * when an administrator schedules an appointment.
+     */
+    public function startAppointment(Request $request, VisitorAppointment $appointment, string $token)
+    {
+        if (! $appointment->hasValidRegistrationToken($token)
+            || $appointment->status !== 'scheduled'
+            || $appointment->registration_completed_at !== null) {
+            abort(403, 'This appointment registration link is no longer available.');
+        }
+
+        $request->session()->forget([
+            'verification',
+            'didit_verification',
+            'visitor_registration',
+            'visitor_category',
+        ]);
+        $request->session()->put('appointment_registration_id', $appointment->id);
+
+        return redirect()->route('visitor.upload_document');
     }
 
     /**
@@ -109,10 +136,20 @@ class VisitorController extends Controller
     {
         $verification = $request->session()->get('verification', $request->session()->get('didit_verification', []));
         $category = $request->session()->get('visitor_category', []);
+        $appointment = $this->activeAppointment($request);
 
         if (! is_array($verification) || blank(data_get($verification, 'session_id')) || data_get($verification, 'face_verification_status') !== 'verified') {
             return redirect()->route('visitor.create')->withErrors([
                 'verification' => 'Complete the live camera identity check before registration.',
+            ]);
+        }
+
+        if ($appointment) {
+            $appointment->loadMissing(['department', 'personToMeet']);
+            $request->merge([
+                'department' => $appointment->department?->name,
+                'person_to_meet' => $appointment->personToMeet?->name ?? 'Not specified',
+                'company' => $appointment->company,
             ]);
         }
 
@@ -127,12 +164,17 @@ class VisitorController extends Controller
             'department' => 'required|string|max:150',
             'person_to_meet' => 'required|string|max:180',
             'visitor_count' => 'required|integer|min:1|max:20',
+            'purpose' => 'required|string|max:1000',
         ], [
             'mobile_number.regex' => 'Enter a 9-digit number after +94.',
             'whatsapp_number.regex' => 'Enter a 9-digit number after +94.',
         ]);
 
-        if (Schema::hasTable('departments')) {
+        if ($appointment) {
+            $department = $appointment->department;
+            $personIsAvailable = $appointment->department_person_id === null
+                || $appointment->personToMeet?->is_active === true;
+        } elseif (Schema::hasTable('departments')) {
             $department = Department::query()
                 ->where('name', $validated['department'])
                 ->where('is_active', true)
@@ -230,6 +272,8 @@ class VisitorController extends Controller
             'registration_status' => 'approval_pending',
             'category' => data_get($category, 'name', 'Not assigned'),
             'entrance_fee' => data_get($category, 'entrance_fee'),
+            'purpose' => data_get($validated, 'purpose'),
+            'visitor_appointment_id' => $appointment?->id,
         ]);
 
         $request->session()->put('visitor_registration', $details);
@@ -239,6 +283,14 @@ class VisitorController extends Controller
             'registration_status' => 'approval_pending',
         ]);
         $request->session()->put('visitor_registration.record_id', $visitor->id);
+
+        if ($appointment) {
+            $appointment->update([
+                'visitor_count' => $validated['visitor_count'],
+                'purpose' => $validated['purpose'],
+                'registration_completed_at' => now(),
+            ]);
+        }
 
         return view('visitor.confirm', compact('details'));
     }
@@ -501,6 +553,8 @@ class VisitorController extends Controller
             'identity_reviewed_at' => data_get($details, 'identity_reviewed_at', now()),
             'category' => data_get($details, 'category'),
             'entrance_fee' => data_get($details, 'entrance_fee'),
+            'purpose' => data_get($details, 'purpose'),
+            'visitor_appointment_id' => data_get($details, 'visitor_appointment_id'),
             'registration_status' => 'payment_pending',
             'verified_at' => data_get($details, 'verified_at', now()),
         ], $overrides);
@@ -526,6 +580,22 @@ class VisitorController extends Controller
         return count($words) >= 2
             && array_sum($letterCounts) >= 6
             && max($letterCounts ?: [0]) >= 3;
+    }
+
+    private function activeAppointment(Request $request): ?VisitorAppointment
+    {
+        $appointmentId = $request->session()->get('appointment_registration_id');
+
+        if (! $appointmentId) {
+            return null;
+        }
+
+        return VisitorAppointment::query()
+            ->with(['department', 'personToMeet'])
+            ->whereKey($appointmentId)
+            ->where('status', 'scheduled')
+            ->whereNull('registration_completed_at')
+            ->first();
     }
 
     /**
