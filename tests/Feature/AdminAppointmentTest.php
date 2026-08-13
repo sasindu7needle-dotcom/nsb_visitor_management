@@ -140,6 +140,7 @@ class AdminAppointmentTest extends TestCase
             'document_type' => 'nic',
             'document_number' => '199012345678',
             'mobile_number' => '+94771234567',
+            'approval_status' => 'pending',
             'registration_status' => 'approval_pending',
         ]);
 
@@ -175,6 +176,21 @@ class AdminAppointmentTest extends TestCase
             ->assertSee($registeredVisit->reference)
             ->assertDontSee('Awaiting Registration')
             ->assertDontSee('Different Day Visitor');
+
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('0 requests')
+            ->assertSee('All requests reviewed');
+
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->get(route('admin.appointments.show', $registeredVisit))
+            ->assertOk()
+            ->assertSee('Visitor review')
+            ->assertSee('Registered Visitor')
+            ->assertSee('Allow entry')
+            ->assertDontSee('Mark completed')
+            ->assertDontSee('Cancel appointment');
     }
 
     public function test_upcoming_visits_tab_requires_a_valid_calendar_date_filter(): void

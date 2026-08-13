@@ -81,6 +81,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/configurations/departments/people/{person}', [AdminDepartmentDirectoryController::class, 'destroyPerson'])->name('configurations.departments.people.destroy');
         Route::get('/appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
         Route::post('/appointments', [AdminAppointmentController::class, 'store'])->name('appointments.store');
+        Route::get('/appointments/{appointment}/visitor-review', [AdminDashboardController::class, 'appointmentVisitorReview'])->name('appointments.show');
         Route::patch('/appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.status');
         Route::get('/visitors', [AdminVisitorController::class, 'index'])->name('visitors.index');
         Route::get('/visitors/{visitor}', fn (VerifiedVisitor $visitor) => redirect()->route('admin.visitors.index'))->name('visitors.show');

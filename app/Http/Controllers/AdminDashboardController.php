@@ -7,6 +7,7 @@ use App\Models\GateLog;
 use App\Models\ReturningFaceVerification;
 use App\Models\User;
 use App\Models\VerifiedVisitor;
+use App\Models\VisitorAppointment;
 use App\Services\GateLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -70,6 +71,7 @@ class AdminDashboardController extends Controller
             ->get();
         $pendingVisitors = VerifiedVisitor::query()
             ->where('approval_status', 'pending')
+            ->whereNull('visitor_appointment_id')
             ->orderBy('approval_requested_at')
             ->orderBy('id')
             ->get();
@@ -94,7 +96,9 @@ class AdminDashboardController extends Controller
     public function counts(): JsonResponse
     {
         return response()->json($this->liveCounts() + [
-            'pending_approvals' => VerifiedVisitor::where('approval_status', 'pending')->count(),
+            'pending_approvals' => VerifiedVisitor::where('approval_status', 'pending')
+                ->whereNull('visitor_appointment_id')
+                ->count(),
             'returning_face_checks' => ReturningFaceVerification::count(),
         ]);
     }
@@ -109,6 +113,7 @@ class AdminDashboardController extends Controller
             'decision' => ['required', 'in:allow,reject'],
             'pass_issued' => ['nullable', 'boolean'],
             'visitor_pass_number' => ['nullable', 'string', 'max:50', 'required_if:pass_issued,1'],
+            'return_to' => ['nullable', 'in:dashboard,appointment'],
         ]);
 
         if ($visitor->approval_status !== 'pending') {
@@ -155,11 +160,31 @@ class AdminDashboardController extends Controller
             ]);
         }
 
-        return redirect()
-            ->route('admin.dashboard')
+        $redirect = redirect();
+        if (($validated['return_to'] ?? null) === 'appointment' && $visitor->visitor_appointment_id) {
+            return $redirect->route('admin.appointments.show', $visitor->visitor_appointment_id)
+                ->with('status', $approved
+                    ? "{$visitor->full_name}'s visit has been allowed and marked as inside."
+                    : "{$visitor->full_name}'s visit has been rejected.");
+        }
+
+        return $redirect->route('admin.dashboard')
             ->with('status', $approved
                 ? "{$visitor->full_name}'s visit has been allowed and marked as inside."
                 : "{$visitor->full_name}'s visit has been rejected.");
+    }
+
+    /** Display the security approval card for a visitor registered from an appointment email. */
+    public function appointmentVisitorReview(VisitorAppointment $appointment)
+    {
+        $appointment->load(['department', 'personToMeet', 'registeredVisitor']);
+
+        abort_unless($appointment->registeredVisitor, 404);
+
+        return view('admin.appointments.visitor-review', [
+            'appointment' => $appointment,
+            'visitor' => $appointment->registeredVisitor,
+        ]);
     }
 
     public function markVisitorPassReturned(VerifiedVisitor $visitor): RedirectResponse
