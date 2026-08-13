@@ -28,7 +28,7 @@
             </div>
 
             <article class="entrance-badge" aria-label="Visitor entrance badge">
-                <div class="badge-topbar"><span>ENTRANCE ID</span><span class="badge-status">VERIFIED</span></div>
+                <div class="badge-topbar"><span>ENTRANCE ID</span><span class="badge-status">REGISTERED</span></div>
                 <header class="badge-event">
                     <span>EVENT NAME</span>
                     <h2>{{ $eventName }}</h2>
@@ -48,7 +48,7 @@
 
                 <div class="badge-identity">
                     <span>VISITOR NAME</span>
-                    <h3>{{ data_get($details, 'full_name', 'Verified Visitor') }}</h3>
+                    <h3>{{ data_get($details, 'full_name', 'Visitor') }}</h3>
                     <div class="badge-category"><span>CATEGORY</span><strong>{{ data_get($details, 'category', 'Visitor') }}</strong></div>
                 </div>
 

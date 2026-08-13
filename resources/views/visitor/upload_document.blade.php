@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Document — Identity Verification</title>
+    <title>Upload Document — Visitor Registration</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
@@ -13,16 +13,16 @@
     <section class="hero">
         <div class="hero-content">
             <div style="margin-bottom: 12px;">
-                <a href="{{ route('visitor.create') }}" class="btn-back-nav">
+                <a href="{{ route('visitor.start') }}" class="btn-back-nav">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                    Back to Privacy Notice
+                    Start over
                 </a>
             </div>
 
-            <div class="tagline">Step 2 of 2</div>
+            <div class="tagline">Visitor self-registration</div>
             <h1 class="headline">Upload your document<span class="dot">.</span></h1>
             <p class="description upload-doc-intro">
-                Select your document type and upload or capture a clear photo of your identity document.
+                Upload a clear document photo. Gemini will read the information and you can review or correct it on the next screen.
             </p>
 
             <div class="verification-consent-card upload-doc-card">
@@ -113,13 +113,13 @@
                 </div>
 
                 <!-- Submit Button -->
-                <button type="button" id="verifyBtn" class="btn btn-primary btn-large form-width-100" style="margin-top: 10px;" disabled>Verify document</button>
+                <button type="button" id="verifyBtn" class="btn btn-primary btn-large form-width-100" style="margin-top: 10px;" disabled>Read document details</button>
 
             </div>
 
             <div class="verification-assurance" style="margin-top: 16px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Encrypted connection · Secure document OCR</span>
+                <span>Encrypted connection · Secure Gemini document information capture</span>
             </div>
         </div>
 
@@ -475,7 +475,7 @@
 
         function updateButtonState() {
             const hasFront = documentFrontImage.files && documentFrontImage.files.length > 0;
-            const needsBack = hiddenInput.value !== 'passport';
+            const needsBack = hiddenInput.value === 'nic';
             const hasBack = documentBackImage.files && documentBackImage.files.length > 0;
             verifyBtn.disabled = !hasFront || (needsBack && !hasBack);
         }
@@ -528,7 +528,7 @@
             const toast = document.createElement('div');
             toast.className = `toast show toast-${type}`;
             
-            let defaultTitle = type === 'success' ? 'Document Verified' : (type === 'error' ? 'Verification Notice' : 'System Notice');
+            let defaultTitle = type === 'success' ? 'Document details ready' : (type === 'error' ? 'Registration notice' : 'System Notice');
             let toastTitle = title || defaultTitle;
 
             let iconSvg = '';
@@ -563,14 +563,14 @@
         verifyBtn.addEventListener('click', async function(e) {
             e.preventDefault();
 
-            const needsBack = hiddenInput.value !== 'passport';
+            const needsBack = hiddenInput.value === 'nic';
             if (!documentFrontImage.files || !documentFrontImage.files[0] || (needsBack && (!documentBackImage.files || !documentBackImage.files[0]))) {
                 showToast(needsBack ? 'Please add both the front and back of the card.' : 'Please add the passport identity page.', 'error');
                 return;
             }
 
             const originalText = this.innerText;
-            this.innerText = "Extracting text from document...";
+            this.innerText = "Reading document details...";
             this.disabled = true;
 
             try {
@@ -579,7 +579,7 @@
                 formData.append('document_front_image', documentFrontImage.files[0]);
                 if (needsBack) formData.append('document_back_image', documentBackImage.files[0]);
 
-                const response = await fetch("{{ route('visitor.verify_vision') }}", {
+                const response = await fetch("{{ route('visitor.read_document') }}", {
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": "{{ csrf_token() }}",
@@ -596,13 +596,13 @@
                         data.error ||
                         validationError ||
                         data.message ||
-                        "Document OCR verification failed."
+                        "Gemini could not read the document."
                     );
                 }
 
-                showToast('Document verified successfully! Redirecting...', 'success');
+                showToast('Document details ready. Redirecting...', 'success');
                 setTimeout(() => {
-                    window.location.href = data.redirect_url || "{{ route('visitor.live_face') }}";
+                    window.location.href = data.redirect_url || "{{ route('visitor.create', ['type' => $type]) }}";
                 }, 800);
 
             } catch (error) {

@@ -17,7 +17,7 @@ class VisitorController extends Controller
 {
     /**
      * Begin a completely new registration without reusing the previous
-     * visitor's document, live photo, category, or payment state.
+     * visitor's document, category, or payment state.
      */
     public function startNew(Request $request)
     {
@@ -29,7 +29,7 @@ class VisitorController extends Controller
             'appointment_registration_id',
         ]);
 
-        return redirect()->route('visitor.create');
+        return redirect()->route('visitor.upload_document');
     }
 
     /**
@@ -43,18 +43,18 @@ class VisitorController extends Controller
         $type = $request->query('type');
         $validTypes = ['nic', 'driving_license', 'passport'];
         if (!in_array($type, $validTypes)) {
-            return view('visitor.select_type');
+            return redirect()->route('visitor.upload_document');
         }
         $verification = $request->session()->get('verification', $request->session()->get('didit_verification', []));
 
         if (! is_array($verification) || blank(data_get($verification, 'session_id'))) {
-            return redirect()->route('visitor.create')->withErrors([
-                'verification' => 'Please complete identity verification before registration.',
+            return redirect()->route('visitor.upload_document')->withErrors([
+                'verification' => 'Upload a document so Gemini can prefill your registration details.',
             ]);
         }
 
-        if (data_get($verification, 'face_verification_status') !== 'verified') {
-            return redirect()->route('visitor.live_face');
+        if (blank(data_get($verification, 'selfie_path'))) {
+            return redirect()->route('visitor.capture_photo');
         }
 
         $type = data_get($verification, 'document_type', $type);
@@ -73,7 +73,7 @@ class VisitorController extends Controller
     }
 
     /**
-     * Begin the identity-verification journey from the unique link emailed
+     * Begin the self-registration journey from the unique link emailed
      * when an administrator schedules an appointment.
      */
     public function startAppointment(Request $request, VisitorAppointment $appointment, string $token)
@@ -112,21 +112,19 @@ class VisitorController extends Controller
         return view('visitor.upload_document', compact('type'));
     }
 
-    public function showLiveFaceCheck(Request $request)
+    /** Display the simple profile-photo capture step; no face comparison occurs. */
+    public function showPhotoCapture(Request $request)
     {
-        $verification = $request->session()->get('verification', []);
-
-        if (! is_array($verification) || blank(data_get($verification, 'session_id'))) {
-            return redirect()->route('visitor.upload_document')->withErrors([
-                'verification' => 'Upload and verify your identity document first.',
-            ]);
+        $registration = $request->session()->get('verification', []);
+        if (! is_array($registration) || blank(data_get($registration, 'session_id'))) {
+            return redirect()->route('visitor.upload_document');
         }
 
-        if (data_get($verification, 'face_verification_status') === 'verified') {
-            return redirect()->route('visitor.create', ['type' => data_get($verification, 'document_type', 'nic')]);
+        if (filled(data_get($registration, 'selfie_path'))) {
+            return redirect()->route('visitor.create', ['type' => data_get($registration, 'document_type', 'nic')]);
         }
 
-        return view('visitor.live_face', ['type' => data_get($verification, 'document_type', 'nic')]);
+        return view('visitor.live_face', ['type' => data_get($registration, 'document_type', 'nic')]);
     }
 
     /**
@@ -138,9 +136,15 @@ class VisitorController extends Controller
         $category = $request->session()->get('visitor_category', []);
         $appointment = $this->activeAppointment($request);
 
-        if (! is_array($verification) || blank(data_get($verification, 'session_id')) || data_get($verification, 'face_verification_status') !== 'verified') {
-            return redirect()->route('visitor.create')->withErrors([
-                'verification' => 'Complete the live camera identity check before registration.',
+        if (! is_array($verification) || blank(data_get($verification, 'session_id'))) {
+            return redirect()->route('visitor.upload_document')->withErrors([
+                'verification' => 'Upload a document before submitting the visit request.',
+            ]);
+        }
+
+        if (blank(data_get($verification, 'selfie_path'))) {
+            return redirect()->route('visitor.capture_photo')->withErrors([
+                'verification' => 'Capture a visitor photo before submitting the visit request.',
             ]);
         }
 
@@ -198,14 +202,11 @@ class VisitorController extends Controller
             data_get($verification, 'full_name')
             ?: data_get($verification, 'full_name_latin')
         ));
-        $recordedNameIsReliable = $this->isReliableIdentityName($recordedName);
-        $verifiedName = $recordedNameIsReliable
-            ? $recordedName
-            : trim((string) (data_get($validated, 'full_name') ?: $recordedName));
+        $verifiedName = trim((string) (data_get($validated, 'full_name') ?: $recordedName));
         $verifiedDocumentNumber = strtoupper((string) preg_replace(
             '/\s+/',
             '',
-            (string) (data_get($verification, 'document_number') ?: data_get($validated, 'document_number'))
+            (string) (data_get($validated, 'document_number') ?: data_get($verification, 'document_number'))
         ));
 
         if (blank($verifiedName) || blank($verifiedDocumentNumber)) {
@@ -235,25 +236,17 @@ class VisitorController extends Controller
             'didit_session_id' => data_get($verification, 'verification_id', data_get($verification, 'session_id')),
             'document_type' => data_get($verification, 'document_type', 'nic'),
             'full_name' => $verifiedName,
-            'full_name_latin' => $recordedNameIsReliable
-                ? (data_get($verification, 'full_name_latin') ?: $verifiedName)
-                : $verifiedName,
+            'full_name_latin' => $verifiedName,
             'document_number' => $verifiedDocumentNumber,
             'address' => data_get($verification, 'address'),
             'address_latin' => data_get($verification, 'address_latin', data_get($verification, 'address')),
-            'photo_url' => data_get($verification, 'photo_url')
-                ?: route('visitor.session_photo', ['type' => data_get($verification, 'selfie_path') ? 'selfie' : 'photo']),
+            'photo_url' => route('visitor.session_photo', ['type' => 'selfie']),
             'photo_path' => data_get($verification, 'photo_path'),
             'photo_mime' => data_get($verification, 'photo_mime'),
             'back_photo_path' => data_get($verification, 'back_photo_path'),
             'back_photo_mime' => data_get($verification, 'back_photo_mime'),
             'selfie_path' => data_get($verification, 'selfie_path'),
             'selfie_mime' => data_get($verification, 'selfie_mime'),
-            'face_verification_status' => data_get($verification, 'face_verification_status'),
-            'face_match_score' => data_get($verification, 'face_match_score'),
-            'face_detection_confidence' => data_get($verification, 'face_detection_confidence'),
-            'face_verified_at' => data_get($verification, 'face_verified_at'),
-            'face_provider' => data_get($verification, 'face_provider'),
             'ocr_provider' => data_get($verification, 'provider'),
             'identity_reviewed_at' => now()->toIso8601String(),
             'verified_at' => data_get($verification, 'verified_at'),
@@ -544,11 +537,6 @@ class VisitorController extends Controller
             'back_photo_mime' => data_get($details, 'back_photo_mime'),
             'selfie_path' => data_get($details, 'selfie_path'),
             'selfie_mime' => data_get($details, 'selfie_mime'),
-            'face_verification_status' => data_get($details, 'face_verification_status', 'pending'),
-            'face_match_score' => data_get($details, 'face_match_score'),
-            'face_detection_confidence' => data_get($details, 'face_detection_confidence'),
-            'face_verified_at' => data_get($details, 'face_verified_at'),
-            'face_provider' => data_get($details, 'face_provider'),
             'ocr_provider' => data_get($details, 'ocr_provider'),
             'identity_reviewed_at' => data_get($details, 'identity_reviewed_at', now()),
             'category' => data_get($details, 'category'),

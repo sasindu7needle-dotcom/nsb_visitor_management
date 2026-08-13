@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\VerifiedVisitor;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class VisitorRegistrationTest extends TestCase
 {
+    use RefreshDatabase;
+
     private array $verification = [
         'session_id' => '11111111-2222-4333-8444-555555555555',
         'document_type' => 'nic',
@@ -15,8 +18,8 @@ class VisitorRegistrationTest extends TestCase
         'document_number' => '199012345678',
         'address' => '12 Galle Road, Colombo',
         'photo_url' => 'https://example.test/verified-photo.jpg',
-        'face_verification_status' => 'verified',
-        'face_match_score' => 88.5,
+        'selfie_path' => 'verified-visitors/11111111-2222-4333-8444-555555555555-face.jpg',
+        'selfie_mime' => 'image/jpeg',
     ];
 
     private array $category = [
@@ -41,7 +44,7 @@ class VisitorRegistrationTest extends TestCase
             ->assertSee('Next');
     }
 
-    public function test_confirmation_uses_reviewed_identity_and_server_controlled_fee(): void
+    public function test_confirmation_uses_visitor_reviewed_gemini_document_information(): void
     {
         $this->withSession([
             'verification' => $this->verification,
@@ -62,13 +65,11 @@ class VisitorRegistrationTest extends TestCase
             'address' => 'Tampered Address',
             'entrance_fee' => '0',
         ])->assertOk()
-            ->assertSee('Nimal Perera')
-            ->assertDontSee('Tampered Name')
-            ->assertDontSee('000000000000')
+            ->assertSee('Tampered Name')
             ->assertDontSee('Tampered Address')
             ->assertDontSee('LKR 1,500.00')
             ->assertSee('+94 771234567')
-            ->assertSee('https://example.test/verified-photo.jpg')
+            ->assertSee(route('visitor.session_photo', ['type' => 'selfie']))
             ->assertSee('sent to the security officer')
             ->assertSee('Finish')
             ->assertDontSee('Choose a payment method')
@@ -77,8 +78,8 @@ class VisitorRegistrationTest extends TestCase
         $this->assertDatabaseHas('verified_visitors', [
             'verification_id' => $this->verification['session_id'],
             'document_type' => 'nic',
-            'document_number' => '199012345678',
-            'full_name' => 'Nimal Perera',
+            'document_number' => '000000000000',
+            'full_name' => 'Tampered Name',
             'address' => '12 Galle Road, Colombo',
             'payment_status' => 'not_required',
             'registration_status' => 'approval_pending',

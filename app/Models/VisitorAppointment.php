@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class VisitorAppointment extends Model
 {
@@ -45,6 +46,12 @@ class VisitorAppointment extends Model
     public function personToMeet(): BelongsTo
     {
         return $this->belongsTo(DepartmentPerson::class, 'department_person_id');
+    }
+
+    /** The verified visitor record created from this appointment's email link. */
+    public function registeredVisitor(): HasOne
+    {
+        return $this->hasOne(VerifiedVisitor::class, 'visitor_appointment_id');
     }
 
     /**

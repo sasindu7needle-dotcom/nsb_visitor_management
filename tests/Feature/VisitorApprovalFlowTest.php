@@ -20,8 +20,7 @@ class VisitorApprovalFlowTest extends TestCase
             'full_name' => 'Rahul Perera',
             'document_number' => '123456789V',
             'address' => 'Colombo',
-            'face_verification_status' => 'verified',
-            'selfie_path' => 'verified-visitors/rahul-live.jpg',
+            'selfie_path' => 'verified-visitors/rahul-face.jpg',
             'selfie_mime' => 'image/jpeg',
         ];
 
@@ -36,6 +35,7 @@ class VisitorApprovalFlowTest extends TestCase
                 'department' => 'Finance Department',
                 'person_to_meet' => 'Ms. Nirosha Fernando',
                 'visitor_count' => 2,
+                'purpose' => 'Account review meeting',
             ])
             ->assertOk()
             ->assertSee('sent to the security officer')
@@ -128,16 +128,8 @@ class VisitorApprovalFlowTest extends TestCase
         $this->assertNotNull($visitor->fresh()->visitor_pass_returned_at);
     }
 
-    public function test_face_screen_exposes_an_explicit_success_continue_action(): void
+    public function test_live_face_registration_screen_is_no_longer_available(): void
     {
-        $this->withSession(['verification' => [
-            'session_id' => '22345678-1234-4234-8234-123456789012',
-            'document_type' => 'passport',
-            'photo_path' => 'verified-visitors/document.jpg',
-            'face_verification_status' => 'pending',
-        ]])
-            ->get(route('visitor.live_face'))
-            ->assertOk()
-            ->assertSee('Photo saved');
+        $this->get('/visitor/live-face-check')->assertMethodNotAllowed();
     }
 }

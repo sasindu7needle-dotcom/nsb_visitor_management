@@ -6,7 +6,7 @@
         <p style="margin:0 0 8px;color:#1769ed;font-size:12px;font-weight:bold;letter-spacing:.08em">NSB VISITOR MANAGEMENT</p>
         <h1 style="margin:0 0 16px;font-size:24px">Complete your visitor registration</h1>
         <p>Hello {{ $appointment->visitor_name }},</p>
-        <p>Your visit has been scheduled. Use the secure button below to verify your identity and complete your visitor registration.</p>
+        <p>Your visit has been scheduled. Use the secure button below to complete your self-registration. Upload a document so Gemini can prefill the registration information, then review it before submitting.</p>
         <table style="width:100%;margin:22px 0;border-collapse:collapse;background:#f8fafc">
             <tr><td style="padding:10px 14px;font-weight:bold">Reference</td><td style="padding:10px 14px">{{ $appointment->reference }}</td></tr>
             <tr><td style="padding:10px 14px;font-weight:bold">Arrival</td><td style="padding:10px 14px">{{ $appointment->scheduled_at->format('D, d M Y, h:i A') }}</td></tr>

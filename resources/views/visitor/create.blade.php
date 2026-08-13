@@ -35,7 +35,7 @@
 <main class="visit-request-shell">
     <section class="visit-request-card" aria-labelledby="visit-title">
         <header class="visit-request-top">
-            <span>{{ $appointment ? 'SCHEDULED APPOINTMENT' : 'PROFILE PHOTO CAPTURED' }}</span>
+            <span>{{ $appointment ? 'SCHEDULED APPOINTMENT' : 'VISITOR SELF-REGISTRATION' }}</span>
             <h1 id="visit-title">Who are you visiting?</h1>
             <p>{{ $appointment ? 'Your booking details have been reserved by NSB.' : 'Complete the visit details for security approval.' }}</p>
         </header>
@@ -48,14 +48,14 @@
         @endif
 
         <div class="verified-person">
-            <img src="{{ route('visitor.session_photo', ['type' => 'selfie']) }}" alt="Captured profile photo" onerror="this.onerror=null;this.src='{{ route('visitor.session_photo', ['type' => 'photo']) }}'">
+            <img src="{{ route('visitor.session_photo', ['type' => 'selfie']) }}" alt="Visitor profile photo">
             <div>
-                <span>Verified visitor</span>
+                <span>Visitor profile photo</span>
                 <h2>{{ data_get($verification, 'full_name', 'Visitor') }}</h2>
                 <strong>{{ strtoupper(str_replace('_', ' ', $type)) }}: {{ data_get($verification, 'document_number', 'Not detected') }}</strong>
                 <small>{{ data_get($verification, 'address', 'Address not detected') }}</small>
                 @if(data_get($category, 'entrance_fee') !== null)<small>Entrance fee: LKR {{ number_format((float) data_get($category, 'entrance_fee'), 2) }}</small>@endif
-                <span class="verified-tick">✓ Identity recorded and profile photo saved</span>
+                <span class="verified-tick">Gemini-filled details — please review before submitting</span>
             </div>
         </div>
 
@@ -65,10 +65,6 @@
 
         @php
             $recordedName = data_get($verification, 'full_name') ?: data_get($verification, 'full_name_latin');
-            $nameLetterCount = strlen((string) preg_replace('/[^A-Za-z]/', '', (string) $recordedName));
-            $hasReliableRecordedName = count(preg_split('/\s+/', trim((string) $recordedName), -1, PREG_SPLIT_NO_EMPTY)) >= 2
-                && $nameLetterCount >= 6
-                && preg_match('/[A-Za-z]{3}/', (string) $recordedName);
             $appointmentPhone = preg_replace('/\D+/', '', (string) ($appointment?->phone ?? ''));
             $appointmentPhone = str_starts_with($appointmentPhone, '94') ? substr($appointmentPhone, 2) : $appointmentPhone;
             $appointmentPhone = str_starts_with($appointmentPhone, '0') ? substr($appointmentPhone, 1) : $appointmentPhone;
@@ -80,15 +76,15 @@
 
             <label class="visit-field">
                 <span>Full name *</span>
-                <input name="full_name" value="{{ old('full_name', $recordedName) }}" maxlength="180" required @readonly($hasReliableRecordedName)>
-                <small style="color:#7b8797;font-size:9px">{{ $hasReliableRecordedName ? 'Recorded from the verified identity document.' : 'Please correct the name shown on the verified identity document.' }}</small>
+                <input name="full_name" value="{{ old('full_name', $recordedName) }}" maxlength="180" required>
+                <small style="color:#7b8797;font-size:9px">Read from your document by Gemini. Correct it if needed.</small>
                 @error('full_name')<small class="form-error-msg">{{ $message }}</small>@enderror
             </label>
 
             <label class="visit-field">
                 <span>NIC / ID number *</span>
-                <input name="document_number" value="{{ old('document_number', data_get($verification, 'document_number')) }}" maxlength="30" style="text-transform:uppercase" required @readonly(filled(data_get($verification, 'document_number')))>
-                <small style="color:#7b8797;font-size:9px">{{ filled(data_get($verification, 'document_number')) ? 'Recorded from the verified identity document.' : 'Enter the NIC or identity number shown on the document.' }}</small>
+                <input name="document_number" value="{{ old('document_number', data_get($verification, 'document_number')) }}" maxlength="30" style="text-transform:uppercase" required>
+                <small style="color:#7b8797;font-size:9px">Read from your document by Gemini. Correct it if needed.</small>
                 @error('document_number')<small class="form-error-msg">{{ $message }}</small>@enderror
             </label>
 

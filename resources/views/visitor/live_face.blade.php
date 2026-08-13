@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
 <body class="landing-page live-face-page">
+    <script>document.title = 'Capture Visitor Photo — NSB Visitor Management';</script>
     <section class="hero">
         <div class="hero-content">
             <a class="face-back" href="{{ route('visitor.upload_document', ['type' => $type]) }}">← Upload document again</a>
@@ -109,7 +110,7 @@
                 const form = new FormData();
                 form.append('selfie', blob, 'live-camera.jpg');
                 try {
-                    const response = await fetch("{{ route('visitor.verify_live_face') }}", {method:'POST', headers:{'X-CSRF-TOKEN':"{{ csrf_token() }}", 'Accept':'application/json'}, body:form});
+                    const response = await fetch("{{ route('visitor.capture_photo.store') }}", {method:'POST', headers:{'X-CSRF-TOKEN':"{{ csrf_token() }}", 'Accept':'application/json'}, body:form});
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok || !data.success) throw new Error(data.error || 'The profile photo could not be saved. Please try again.');
                     statusText.textContent = 'Profile photo captured';

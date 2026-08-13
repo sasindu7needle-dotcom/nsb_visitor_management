@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\DepartmentPerson;
 use App\Models\VisitorAppointment;
+use App\Models\VerifiedVisitor;
 use App\Mail\AppointmentRegistrationMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -117,6 +118,72 @@ class AdminAppointmentTest extends TestCase
         $this->assertDatabaseHas('visitor_appointments', ['id' => $appointment->id, 'status' => 'completed']);
     }
 
+    public function test_upcoming_visits_tab_lists_registered_future_visits_for_the_selected_date(): void
+    {
+        $department = Department::create(['name' => 'Operations']);
+        $visitDate = now()->addDays(2)->startOfDay()->addHours(10);
+
+        $registeredVisit = VisitorAppointment::create([
+            'reference' => 'APT-260813-UP001',
+            'visitor_name' => 'Registered Visitor',
+            'phone' => '0771234567',
+            'department_id' => $department->id,
+            'scheduled_at' => $visitDate,
+            'duration_minutes' => 30,
+            'purpose' => 'Account review',
+        ]);
+
+        VerifiedVisitor::create([
+            'visitor_appointment_id' => $registeredVisit->id,
+            'verification_id' => 'appointment-upcoming-visitor',
+            'full_name' => 'Registered Visitor',
+            'document_type' => 'nic',
+            'document_number' => '199012345678',
+            'mobile_number' => '+94771234567',
+            'registration_status' => 'approval_pending',
+        ]);
+
+        VisitorAppointment::create([
+            'reference' => 'APT-260813-UP002',
+            'visitor_name' => 'Awaiting Registration',
+            'phone' => '0771234568',
+            'department_id' => $department->id,
+            'scheduled_at' => $visitDate->copy()->addHour(),
+            'duration_minutes' => 30,
+            'purpose' => 'Awaiting visitor registration.',
+        ]);
+
+        VisitorAppointment::create([
+            'reference' => 'APT-260813-UP003',
+            'visitor_name' => 'Different Day Visitor',
+            'phone' => '0771234569',
+            'department_id' => $department->id,
+            'scheduled_at' => $visitDate->copy()->addDay(),
+            'duration_minutes' => 30,
+            'purpose' => 'Another meeting',
+            'registration_completed_at' => now(),
+        ]);
+
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->get(route('admin.appointments.index', [
+                'tab' => 'upcoming',
+                'date' => $visitDate->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('Upcoming visits')
+            ->assertSee('Registered Visitor')
+            ->assertSee($registeredVisit->reference)
+            ->assertDontSee('Awaiting Registration')
+            ->assertDontSee('Different Day Visitor');
+    }
+
+    public function test_upcoming_visits_tab_requires_a_valid_calendar_date_filter(): void
+    {
+        $this->withSession(['admin_authenticated' => true, 'admin_username' => 'admin'])
+            ->get(route('admin.appointments.index', ['tab' => 'upcoming', 'date' => '13-08-2026']))
+            ->assertSessionHasErrors('date');
+    }
+
     public function test_email_link_starts_registration_and_uses_visitor_submitted_booking_details(): void
     {
         $department = Department::create(['name' => 'Customer Service']);
@@ -148,7 +215,8 @@ class AdminAppointmentTest extends TestCase
             'document_type' => 'nic',
             'full_name' => 'Nimal Perera',
             'document_number' => '199012345678',
-            'face_verification_status' => 'verified',
+            'selfie_path' => 'verified-visitors/99999999-2222-4333-8444-555555555555-face.jpg',
+            'selfie_mime' => 'image/jpeg',
         ];
 
         $this->withSession([

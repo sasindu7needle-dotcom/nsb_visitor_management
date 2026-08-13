@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VerifiedVisitor extends Model
 {
@@ -67,5 +68,10 @@ class VerifiedVisitor extends Model
     public function latestReturningFaceVerification(): HasOne
     {
         return $this->hasOne(ReturningFaceVerification::class, 'visitor_id')->latestOfMany('checked_at');
+    }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(VisitorAppointment::class, 'visitor_appointment_id');
     }
 }

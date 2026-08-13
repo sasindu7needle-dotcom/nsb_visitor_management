@@ -36,6 +36,12 @@ return [
         'ca_bundle' => env('GOOGLE_VISION_CA_BUNDLE'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'timeout' => (int) env('GEMINI_TIMEOUT', 60),
+    ],
+
     'local_face' => [
         'python_path' => env('FACE_PYTHON_PATH', 'python'),
         'site_packages' => env('FACE_PYTHON_SITE_PACKAGES'),

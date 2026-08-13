@@ -14,21 +14,54 @@ use Illuminate\View\View;
 
 class AdminAppointmentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $filters = $request->validate([
+            'tab' => ['nullable', 'in:schedule,upcoming'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $activeTab = $filters['tab'] ?? 'schedule';
+        $selectedDate = $filters['date'] ?? null;
+
         $departments = Department::query()
             ->where('is_active', true)
             ->with(['people' => fn ($query) => $query->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
-        $appointments = VisitorAppointment::query()
-            ->with(['department', 'personToMeet'])
-            ->whereIn('status', ['scheduled', 'completed'])
+        $upcomingVisits = VisitorAppointment::query()
+            ->with(['department', 'personToMeet', 'registeredVisitor'])
+            ->where('status', 'scheduled')
+            ->where(function ($query) {
+                // The visitor record is the source of truth for new
+                // registrations; retain the timestamp check for any records
+                // completed before the visitor-appointment link existed.
+                $query->whereHas('registeredVisitor')
+                    ->orWhereNotNull('registration_completed_at');
+            })
+            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->when($selectedDate, fn ($query, $date) => $query->whereDate('scheduled_at', $date))
             ->orderBy('scheduled_at')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('admin.appointments.index', compact('departments', 'appointments'));
+        $upcomingVisitCount = VisitorAppointment::query()
+            ->where('status', 'scheduled')
+            ->where(function ($query) {
+                $query->whereHas('registeredVisitor')
+                    ->orWhereNotNull('registration_completed_at');
+            })
+            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->count();
+
+        return view('admin.appointments.index', compact(
+            'departments',
+            'upcomingVisits',
+            'upcomingVisitCount',
+            'activeTab',
+            'selectedDate',
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -96,11 +129,16 @@ class AdminAppointmentController extends Controller
     {
         $validated = $request->validate([
             'status' => ['required', 'in:scheduled,completed,cancelled'],
+            'return_tab' => ['nullable', 'in:schedule,upcoming'],
+            'return_date' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
-        $appointment->update($validated);
+        $appointment->update(['status' => $validated['status']]);
 
-        return redirect()->route('admin.appointments.index')
+        return redirect()->route('admin.appointments.index', array_filter([
+            'tab' => $validated['return_tab'] ?? null,
+            'date' => $validated['return_date'] ?? null,
+        ]))
             ->with('status', "Appointment {$appointment->reference} marked as {$validated['status']}.");
     }
 

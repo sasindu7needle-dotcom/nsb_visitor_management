@@ -16,7 +16,17 @@
         <a href="{{ route('admin.dashboard') }}" class="admin-brand admin-sidebar-brand"><span class="admin-brand-mark"></span><span>NSB <strong>VISITOR MANAGEMENT</strong></span></a>
         <nav aria-label="Admin navigation">
             <a href="{{ route('admin.dashboard') }}" class="admin-nav-link @if(request()->routeIs('admin.dashboard*')) active @endif"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg><span>Dashboard</span></a>
-            <a href="{{ route('admin.appointments.index') }}" class="admin-nav-link @if(request()->routeIs('admin.appointments*')) active @endif"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 17h6"></path></svg><span>Appointments</span></a>
+            <div class="admin-nav-group @if(request()->routeIs('admin.appointments*')) active @else collapsed @endif">
+                <button type="button" class="admin-nav-group-title" aria-expanded="{{ request()->routeIs('admin.appointments*') ? 'true' : 'false' }}">
+                    <svg class="admin-nav-group-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 17h6"></path></svg>
+                    <span>Appointments</span>
+                    <svg class="admin-nav-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
+                </button>
+                <div class="admin-nav-subtabs">
+                    <a href="{{ route('admin.appointments.index', ['tab' => 'schedule']) }}" class="@if(request()->routeIs('admin.appointments*') && request('tab', 'schedule') === 'schedule') active @endif">Schedule Appointment</a>
+                    <a href="{{ route('admin.appointments.index', ['tab' => 'upcoming']) }}" class="@if(request()->routeIs('admin.appointments*') && request('tab') === 'upcoming') active @endif">Upcoming Visits</a>
+                </div>
+            </div>
             <a href="{{ route('admin.visitors.index') }}" class="admin-nav-link @if(request()->routeIs('admin.visitors*')) active @endif"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg><span>Visitors</span></a>
             <div class="admin-nav-group @if(request()->routeIs('admin.configurations*')) active @else collapsed @endif">
                 <button type="button" class="admin-nav-group-title" aria-expanded="{{ request()->routeIs('admin.configurations*') ? 'true' : 'false' }}">

@@ -29,15 +29,15 @@
                     @if(data_get($details, 'selfie_path'))
                         <img src="{{ route('visitor.session_photo', ['type' => 'selfie']) }}" alt="Live camera visitor photo" onerror="this.onerror=null; this.src='{{ route('visitor.session_photo', ['type' => 'photo']) }}';">
                     @elseif(data_get($details, 'photo_url'))
-                        <img src="{{ $details['photo_url'] }}" alt="Verified visitor photo" onerror="this.onerror=null; this.src='{{ route('visitor.session_photo', ['type' => 'photo']) }}';">
+                        <img src="{{ $details['photo_url'] }}" alt="Visitor profile photo" onerror="this.onerror=null; this.src='{{ route('visitor.session_photo', ['type' => 'selfie']) }}';">
                     @elseif(data_get($details, 'photo_path'))
-                        <img src="{{ route('visitor.session_photo', ['type' => 'photo']) }}" alt="Verified visitor photo">
+                        <img src="{{ route('visitor.session_photo', ['type' => 'selfie']) }}" alt="Visitor profile photo">
                     @else
                         <div class="visitor-photo-placeholder" aria-label="Visitor photo unavailable">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
                         </div>
                     @endif
-                    <span class="verified-photo-badge">VERIFIED IDENTITY</span>
+                    <span class="verified-photo-badge">VISITOR PHOTO</span>
                 </div>
 
                 <div class="confirmation-details-grid">
@@ -69,7 +69,7 @@
             </div>
 
             <div class="confirmation-actions">
-                <a href="{{ route('visitor.create', ['type' => $details['document_type'], 'verified' => 'true']) }}" class="btn-back-link">Back to edit</a>
+                <a href="{{ route('visitor.create', ['type' => $details['document_type']]) }}" class="btn-back-link">Back to edit</a>
                 <a href="{{ url('/') }}" class="btn btn-primary btn-large confirmation-pay-button" style="text-decoration:none">Finish</a>
             </div>
         </section>
